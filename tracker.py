@@ -209,6 +209,7 @@ def push_to_github(msg):
         print("Errore push:", e)
 
 def main():
+    git_pull()
     fleet = load_fleet_config()
     ensure_master_index(fleet)
     trackers = {reg: RunTracker(reg, info) for reg, info in fleet.items()}
@@ -217,8 +218,8 @@ def main():
     last_pull_time = time.time()
 
     while True:
-        # Controllo aggiornamenti da GitHub ogni 5 minuti
-        if time.time() - last_pull_time > 300:
+        # Controllo automatico ogni 24 ore (86400 secondi)
+        if time.time() - last_pull_time > 86400:
             git_pull()
             new_fleet = load_fleet_config()
             for r, inf in new_fleet.items():

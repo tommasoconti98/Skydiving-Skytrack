@@ -5,6 +5,12 @@
       "name": "D-FGMG - Skydive Salerno",
       "model": "Pilatus PC-6",
       "runs": []
+    },
+    {
+      "reg": "I-NICO",
+      "name": "I-NICO - Skydive Lucca",
+      "model": "Cessna 208 Caravan",
+      "runs": []
     }
   ],
   "last_updated": "2026-11-06T12:00:00Z"
