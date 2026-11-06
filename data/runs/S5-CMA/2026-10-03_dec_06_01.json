@@ -1,0 +1,31 @@
+{
+  "reg": "S5-CMA",
+  "dropzone": "CrazyFly",
+  "date": "2026-10-03",
+  "time": "15:30",
+  "stats": {
+    "altitude_m": 3840,
+    "heading_deg": 117,
+    "ground_speed_kt": 81.0,
+    "separation_sec": 7.2,
+    "duration_sec": 7
+  },
+  "points": [
+    {
+      "lat": 41.469387,
+      "lon": 12.737707
+    },
+    {
+      "lat": 41.468945,
+      "lon": 12.738944
+    },
+    {
+      "lat": 41.468571,
+      "lon": 12.739872
+    },
+    {
+      "lat": 41.468151,
+      "lon": 12.740972
+    }
+  ]
+}
