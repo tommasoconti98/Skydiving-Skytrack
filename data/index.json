@@ -422,7 +422,476 @@
       "reg": "D-FSKY",
       "name": "D-FSKY - Skydive Lucca",
       "model": "Pilatus PC-6",
-      "runs": []
+      "runs": [
+        {
+          "file": "D-FSKY/2026-10-31_dec_05_01.json",
+          "date": "2026-10-31",
+          "time": "13:40",
+          "title": "Decollo #5",
+          "duration_sec": 46,
+          "heading_deg": 101,
+          "speed_kt": 60.9
+        },
+        {
+          "file": "D-FSKY/2026-10-31_dec_04_01.json",
+          "date": "2026-10-31",
+          "time": "12:32",
+          "title": "Decollo #4",
+          "duration_sec": 24,
+          "heading_deg": 100,
+          "speed_kt": 68.6
+        },
+        {
+          "file": "D-FSKY/2026-10-31_dec_03_01.json",
+          "date": "2026-10-31",
+          "time": "12:04",
+          "title": "Decollo #3",
+          "duration_sec": 33,
+          "heading_deg": 104,
+          "speed_kt": 62.5
+        },
+        {
+          "file": "D-FSKY/2026-10-31_dec_02_01.json",
+          "date": "2026-10-31",
+          "time": "10:56",
+          "title": "Decollo #2",
+          "duration_sec": 11,
+          "heading_deg": 96,
+          "speed_kt": 62.7
+        },
+        {
+          "file": "D-FSKY/2026-10-31_dec_01_01.json",
+          "date": "2026-10-31",
+          "time": "10:05",
+          "title": "Decollo #1",
+          "duration_sec": 20,
+          "heading_deg": 98,
+          "speed_kt": 58.2
+        },
+        {
+          "file": "D-FSKY/2026-10-25_dec_04_01.json",
+          "date": "2026-10-25",
+          "time": "13:34",
+          "title": "Decollo #4",
+          "duration_sec": 9,
+          "heading_deg": 289,
+          "speed_kt": 50.8
+        },
+        {
+          "file": "D-FSKY/2026-10-25_dec_03_01.json",
+          "date": "2026-10-25",
+          "time": "11:44",
+          "title": "Decollo #3",
+          "duration_sec": 73,
+          "heading_deg": 283,
+          "speed_kt": 58.1
+        },
+        {
+          "file": "D-FSKY/2026-10-25_dec_02_01.json",
+          "date": "2026-10-25",
+          "time": "10:57",
+          "title": "Decollo #2",
+          "duration_sec": 10,
+          "heading_deg": 277,
+          "speed_kt": 52.2
+        },
+        {
+          "file": "D-FSKY/2026-10-25_dec_01_01.json",
+          "date": "2026-10-25",
+          "time": "09:11",
+          "title": "Decollo #1",
+          "duration_sec": 23,
+          "heading_deg": 280,
+          "speed_kt": 63.2
+        },
+        {
+          "file": "D-FSKY/2026-10-24_dec_04_01.json",
+          "date": "2026-10-24",
+          "time": "14:21",
+          "title": "Decollo #4",
+          "duration_sec": 23,
+          "heading_deg": 286,
+          "speed_kt": 56.5
+        },
+        {
+          "file": "D-FSKY/2026-10-24_dec_03_01.json",
+          "date": "2026-10-24",
+          "time": "13:06",
+          "title": "Decollo #3",
+          "duration_sec": 13,
+          "heading_deg": 284,
+          "speed_kt": 61.4
+        },
+        {
+          "file": "D-FSKY/2026-10-24_dec_02_01.json",
+          "date": "2026-10-24",
+          "time": "12:15",
+          "title": "Decollo #2",
+          "duration_sec": 47,
+          "heading_deg": 280,
+          "speed_kt": 55.7
+        },
+        {
+          "file": "D-FSKY/2026-10-24_dec_01_01.json",
+          "date": "2026-10-24",
+          "time": "09:38",
+          "title": "Decollo #1",
+          "duration_sec": 7,
+          "heading_deg": 286,
+          "speed_kt": 58.0
+        },
+        {
+          "file": "D-FSKY/2026-10-17_dec_03_01.json",
+          "date": "2026-10-17",
+          "time": "11:41",
+          "title": "Decollo #3",
+          "duration_sec": 79,
+          "heading_deg": 285,
+          "speed_kt": 77.2
+        },
+        {
+          "file": "D-FSKY/2026-10-17_dec_02_01.json",
+          "date": "2026-10-17",
+          "time": "10:25",
+          "title": "Decollo #2",
+          "duration_sec": 60,
+          "heading_deg": 281,
+          "speed_kt": 74.1
+        },
+        {
+          "file": "D-FSKY/2026-10-17_dec_01_01.json",
+          "date": "2026-10-17",
+          "time": "09:13",
+          "title": "Decollo #1",
+          "duration_sec": 55,
+          "heading_deg": 279,
+          "speed_kt": 71.7
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_08_01.json",
+          "date": "2026-10-11",
+          "time": "12:19",
+          "title": "Decollo #8",
+          "duration_sec": 15,
+          "heading_deg": 282,
+          "speed_kt": 54.4
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_07_01.json",
+          "date": "2026-10-11",
+          "time": "11:24",
+          "title": "Decollo #7",
+          "duration_sec": 6,
+          "heading_deg": 275,
+          "speed_kt": 56.0
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_06_01.json",
+          "date": "2026-10-11",
+          "time": "10:39",
+          "title": "Decollo #6",
+          "duration_sec": 33,
+          "heading_deg": 281,
+          "speed_kt": 58.9
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_05_01.json",
+          "date": "2026-10-11",
+          "time": "10:17",
+          "title": "Decollo #5",
+          "duration_sec": 28,
+          "heading_deg": 281,
+          "speed_kt": 53.7
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_04_01.json",
+          "date": "2026-10-11",
+          "time": "09:56",
+          "title": "Decollo #4",
+          "duration_sec": 8,
+          "heading_deg": 279,
+          "speed_kt": 61.5
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_03_01.json",
+          "date": "2026-10-11",
+          "time": "08:59",
+          "title": "Decollo #3",
+          "duration_sec": 18,
+          "heading_deg": 280,
+          "speed_kt": 58.9
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_02_01.json",
+          "date": "2026-10-11",
+          "time": "08:16",
+          "title": "Decollo #2",
+          "duration_sec": 9,
+          "heading_deg": 277,
+          "speed_kt": 63.4
+        },
+        {
+          "file": "D-FSKY/2026-10-11_dec_01_01.json",
+          "date": "2026-10-11",
+          "time": "07:33",
+          "title": "Decollo #1",
+          "duration_sec": 25,
+          "heading_deg": 280,
+          "speed_kt": 68.3
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_08_01.json",
+          "date": "2026-10-10",
+          "time": "13:51",
+          "title": "Decollo #8",
+          "duration_sec": 12,
+          "heading_deg": 108,
+          "speed_kt": 75.2
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_07_01.json",
+          "date": "2026-10-10",
+          "time": "13:09",
+          "title": "Decollo #7",
+          "duration_sec": 20,
+          "heading_deg": 102,
+          "speed_kt": 87.5
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_06_01.json",
+          "date": "2026-10-10",
+          "time": "12:00",
+          "title": "Decollo #6",
+          "duration_sec": 11,
+          "heading_deg": 94,
+          "speed_kt": 72.0
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_05_01.json",
+          "date": "2026-10-10",
+          "time": "11:39",
+          "title": "Decollo #5",
+          "duration_sec": 38,
+          "heading_deg": 93,
+          "speed_kt": 73.5
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_04_01.json",
+          "date": "2026-10-10",
+          "time": "10:30",
+          "title": "Decollo #4",
+          "duration_sec": 21,
+          "heading_deg": 98,
+          "speed_kt": 73.8
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_03_01.json",
+          "date": "2026-10-10",
+          "time": "08:42",
+          "title": "Decollo #3",
+          "duration_sec": 12,
+          "heading_deg": 94,
+          "speed_kt": 68.5
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_02_01.json",
+          "date": "2026-10-10",
+          "time": "07:56",
+          "title": "Decollo #2",
+          "duration_sec": 8,
+          "heading_deg": 96,
+          "speed_kt": 73.2
+        },
+        {
+          "file": "D-FSKY/2026-10-10_dec_01_01.json",
+          "date": "2026-10-10",
+          "time": "07:33",
+          "title": "Decollo #1",
+          "duration_sec": 70,
+          "heading_deg": 96,
+          "speed_kt": 73.5
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_08_01.json",
+          "date": "2026-10-04",
+          "time": "12:49",
+          "title": "Decollo #8",
+          "duration_sec": 53,
+          "heading_deg": 278,
+          "speed_kt": 74.9
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_07_01.json",
+          "date": "2026-10-04",
+          "time": "12:27",
+          "title": "Decollo #7",
+          "duration_sec": 62,
+          "heading_deg": 280,
+          "speed_kt": 70.3
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_06_01.json",
+          "date": "2026-10-04",
+          "time": "10:49",
+          "title": "Decollo #6",
+          "duration_sec": 71,
+          "heading_deg": 275,
+          "speed_kt": 65.9
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_05_01.json",
+          "date": "2026-10-04",
+          "time": "10:27",
+          "title": "Decollo #5",
+          "duration_sec": 71,
+          "heading_deg": 277,
+          "speed_kt": 69.3
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_04_01.json",
+          "date": "2026-10-04",
+          "time": "10:03",
+          "title": "Decollo #4",
+          "duration_sec": 79,
+          "heading_deg": 277,
+          "speed_kt": 62.9
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_03_01.json",
+          "date": "2026-10-04",
+          "time": "09:13",
+          "title": "Decollo #3",
+          "duration_sec": 77,
+          "heading_deg": 273,
+          "speed_kt": 64.5
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_02_01.json",
+          "date": "2026-10-04",
+          "time": "08:39",
+          "title": "Decollo #2",
+          "duration_sec": 65,
+          "heading_deg": 278,
+          "speed_kt": 67.5
+        },
+        {
+          "file": "D-FSKY/2026-10-04_dec_01_01.json",
+          "date": "2026-10-04",
+          "time": "08:17",
+          "title": "Decollo #1",
+          "duration_sec": 76,
+          "heading_deg": 279,
+          "speed_kt": 68.6
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_12_01.json",
+          "date": "2026-10-03",
+          "time": "14:35",
+          "title": "Decollo #12",
+          "duration_sec": 34,
+          "heading_deg": 93,
+          "speed_kt": 73.8
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_11_01.json",
+          "date": "2026-10-03",
+          "time": "13:29",
+          "title": "Decollo #11",
+          "duration_sec": 45,
+          "heading_deg": 94,
+          "speed_kt": 72.4
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_10_01.json",
+          "date": "2026-10-03",
+          "time": "13:08",
+          "title": "Decollo #10",
+          "duration_sec": 58,
+          "heading_deg": 92,
+          "speed_kt": 68.6
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_09_01.json",
+          "date": "2026-10-03",
+          "time": "12:46",
+          "title": "Decollo #9",
+          "duration_sec": 54,
+          "heading_deg": 96,
+          "speed_kt": 72.4
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_08_01.json",
+          "date": "2026-10-03",
+          "time": "11:24",
+          "title": "Decollo #8",
+          "duration_sec": 76,
+          "heading_deg": 97,
+          "speed_kt": 64.8
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_07_01.json",
+          "date": "2026-10-03",
+          "time": "11:03",
+          "title": "Decollo #7",
+          "duration_sec": 66,
+          "heading_deg": 97,
+          "speed_kt": 67.7
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_06_01.json",
+          "date": "2026-10-03",
+          "time": "10:41",
+          "title": "Decollo #6",
+          "duration_sec": 38,
+          "heading_deg": 98,
+          "speed_kt": 67.5
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_05_01.json",
+          "date": "2026-10-03",
+          "time": "10:17",
+          "title": "Decollo #5",
+          "duration_sec": 67,
+          "heading_deg": 97,
+          "speed_kt": 62.2
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_04_01.json",
+          "date": "2026-10-03",
+          "time": "09:27",
+          "title": "Decollo #4",
+          "duration_sec": 82,
+          "heading_deg": 98,
+          "speed_kt": 70.0
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_03_01.json",
+          "date": "2026-10-03",
+          "time": "09:06",
+          "title": "Decollo #3",
+          "duration_sec": 34,
+          "heading_deg": 98,
+          "speed_kt": 69.1
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_02_01.json",
+          "date": "2026-10-03",
+          "time": "08:43",
+          "title": "Decollo #2",
+          "duration_sec": 62,
+          "heading_deg": 93,
+          "speed_kt": 70.9
+        },
+        {
+          "file": "D-FSKY/2026-10-03_dec_01_01.json",
+          "date": "2026-10-03",
+          "time": "08:22",
+          "title": "Decollo #1",
+          "duration_sec": 57,
+          "heading_deg": 98,
+          "speed_kt": 69.2
+        }
+      ]
     },
     {
       "reg": "S5-CMA",
@@ -437,5 +906,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-06T14:18:35.969594+00:00"
+  "last_updated": "2026-11-06T15:32:11.569636+00:00"
 }

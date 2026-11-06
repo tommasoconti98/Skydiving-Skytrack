@@ -1,0 +1,35 @@
+{
+  "reg": "D-FSKY",
+  "dropzone": "Skydive Lucca",
+  "date": "2026-10-10",
+  "time": "07:56",
+  "stats": {
+    "altitude_m": 4076,
+    "heading_deg": 96,
+    "ground_speed_kt": 73.2,
+    "separation_sec": 8.0,
+    "duration_sec": 8
+  },
+  "points": [
+    {
+      "lat": 43.828465,
+      "lon": 10.579043
+    },
+    {
+      "lat": 43.828403,
+      "lon": 10.579959
+    },
+    {
+      "lat": 43.828308,
+      "lon": 10.58087
+    },
+    {
+      "lat": 43.828232,
+      "lon": 10.581936
+    },
+    {
+      "lat": 43.828167,
+      "lon": 10.582931
+    }
+  ]
+}
