@@ -8,11 +8,27 @@
     "radius_km": 25.0
   },
   {
-    "reg": "I-NICO",
+    "reg": "D-FSKY",
     "name": "Skydive Lucca",
-    "model": "Cessna 208 Caravan",
+    "model": "Pilatus PC-6",
     "center_lat": 43.8332,
     "center_lon": 10.5800,
+    "radius_km": 25.0
+  },
+  {
+    "reg": "S5-CMA",
+    "name": "CrazyFly",
+    "model": "Pilatus PC-6",
+    "center_lat": 41.4661,
+    "center_lon": 12.7457,
+    "radius_km": 25.0
+  },
+  {
+    "reg": "OK-AFF",
+    "name": "Costa D'ARgento",
+    "model": "Pilatus PC-6",
+    "center_lat": 42.4950,
+    "center_lon": 11.2388,
     "radius_km": 25.0
   }
 ]
