@@ -7,6 +7,7 @@ import subprocess
 import requests
 
 REPO_DIR = os.path.expanduser("~/Skydiving-Skytrack")
+AIRCRAFT_CONFIG = os.path.join(REPO_DIR, "aircraft.json")
 DATA_DIR = os.path.join(REPO_DIR, "data")
 RUNS_DIR = os.path.join(DATA_DIR, "runs")
 
@@ -16,35 +17,43 @@ HEADERS = {
     "Origin": "https://www.flightradar24.com"
 }
 
-WATCHLIST = {
-    "D-FGMG": {
-        "name": "Skydive Salerno",
-        "model": "Pilatus PC-6",
-        "center_lat": 40.4720,
-        "center_lon": 14.9608,
-        "radius_km": 25.0
-    }
-}
+def load_fleet_config():
+    if not os.path.exists(AIRCRAFT_CONFIG):
+        return {}
+    try:
+        with open(AIRCRAFT_CONFIG, "r") as f:
+            fleet_list = json.load(f)
+            return {ac["reg"]: ac for ac in fleet_list}
+    except Exception as e:
+        print("Errore lettura aircraft.json:", e)
+        return {}
 
-def ensure_index_exists():
+def ensure_master_index(fleet_dict):
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(RUNS_DIR, exist_ok=True)
     index_path = os.path.join(DATA_DIR, "index.json")
+
     if not os.path.exists(index_path):
-        initial = {
-            "aircrafts": [
-                {
-                    "reg": reg,
-                    "name": f"{reg} - {info['name']}",
-                    "model": info["model"],
-                    "runs": []
-                }
-                for reg, info in WATCHLIST.items()
-            ],
-            "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat()
-        }
-        with open(index_path, "w") as f:
-            json.dump(initial, f, indent=2)
+        data = {"aircrafts": [], "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    else:
+        try:
+            with open(index_path, "r") as f:
+                data = json.load(f)
+        except Exception:
+            data = {"aircrafts": [], "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+
+    existing_regs = {ac["reg"] for ac in data.get("aircrafts", [])}
+    for reg, info in fleet_dict.items():
+        if reg not in existing_regs:
+            data["aircrafts"].append({
+                "reg": reg,
+                "name": f"{reg} - {info['name']}",
+                "model": info.get("model", ""),
+                "runs": []
+            })
+
+    with open(index_path, "w") as f:
+        json.dump(data, f, indent=2)
 
 def get_fr24_url(lat, lon, radius_km):
     delta_lat = radius_km / 111.0
@@ -71,27 +80,22 @@ class RunTracker:
             "alt_m": alt_m, "speed_kt": speed_kt, "v_rate": v_rate_fpm
         }
 
-        # Inizio Run-In: quota >= 2800m, volo orizzontale (-500/+500 ft/min)
         if self.state == "IDLE":
             if alt_m >= 2800 and abs(v_rate_fpm) < 500 and 65 <= speed_kt <= 110:
-                print(f"[{self.reg}] RUN-IN RILEVATO a quota {alt_m}m! Inizio campionamento...")
+                print(f"[{self.reg}] Inizio RUN-IN a {alt_m}m!")
                 self.state = "RUN_IN"
                 self.buffer = [point]
 
-        # Durante il Run-In
         elif self.state == "RUN_IN":
             self.buffer.append(point)
 
-            # Fine Run-In: aereo in discesa decisa (< -1800 ft/min)
             if v_rate_fpm <= -1800:
                 print(f"[{self.reg}] Fine RUN-IN (Picchiata: {v_rate_fpm} ft/min).")
-                if len(self.buffer) >= 6:  # Almeno 30 secondi di dati
+                if len(self.buffer) >= 6:
                     self.finalize_run()
                 self.reset()
-
-            # Timeout di salvaguardia (oltre 4 minuti non era un lancio)
             elif (now - self.buffer[0]["time"]) > 240:
-                print(f"[{self.reg}] Timeout run superato. Scarto buffer.")
+                print(f"[{self.reg}] Timeout durata superato.")
                 self.reset()
 
     def finalize_run(self):
@@ -133,7 +137,7 @@ class RunTracker:
         with open(file_path, "w") as f:
             json.dump(run_data, f, indent=2)
 
-        print(f"[{self.reg}] File run salvato: {file_name}")
+        print(f"[{self.reg}] File run scritto: {file_name}")
         update_master_index(self.reg, file_name, date_str, time_str, duration, avg_track, avg_speed)
         clean_old_runs()
         push_to_github(f"Nuovo lancio {self.reg} #{run_num} - {date_str}")
@@ -189,22 +193,41 @@ def clean_old_runs():
     with open(index_path, "w") as f:
         json.dump(data, f, indent=2)
 
+def git_pull():
+    try:
+        subprocess.run(["git", "-C", REPO_DIR, "pull", "--rebase"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
 def push_to_github(msg):
     try:
         subprocess.run(["git", "-C", REPO_DIR, "add", "."], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", msg], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-        print(">> Repository sincronizzato con GitHub Pages.")
+        print(">> Repository sincronizzato.")
     except Exception as e:
         print("Errore push:", e)
 
 def main():
-    ensure_index_exists()
-    trackers = {reg: RunTracker(reg, info) for reg, info in WATCHLIST.items()}
-    print(f"Monitor attivo su watchlist: {list(WATCHLIST.keys())}")
+    fleet = load_fleet_config()
+    ensure_master_index(fleet)
+    trackers = {reg: RunTracker(reg, info) for reg, info in fleet.items()}
+    print(f"Monitor attivo su watchlist: {list(trackers.keys())}")
+
+    last_pull_time = time.time()
 
     while True:
-        for reg, tracker in trackers.items():
+        # Controllo aggiornamenti da GitHub ogni 5 minuti
+        if time.time() - last_pull_time > 300:
+            git_pull()
+            new_fleet = load_fleet_config()
+            for r, inf in new_fleet.items():
+                if r not in trackers:
+                    print(f"Nuovo aereo aggiunto dinamicamente: {r}")
+                    trackers[r] = RunTracker(r, inf)
+            last_pull_time = time.time()
+
+        for reg, tracker in list(trackers.items()):
             url = get_fr24_url(tracker.info["center_lat"], tracker.info["center_lon"], tracker.info["radius_km"])
             try:
                 r = requests.get(url, headers=HEADERS, timeout=5)

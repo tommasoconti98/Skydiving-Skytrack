@@ -1,0 +1,18 @@
+[
+  {
+    "reg": "D-FGMG",
+    "name": "Skydive Salerno",
+    "model": "Pilatus PC-6",
+    "center_lat": 40.4720,
+    "center_lon": 14.9608,
+    "radius_km": 25.0
+  },
+  {
+    "reg": "I-NICO",
+    "name": "Skydive Lucca",
+    "model": "Cessna 208 Caravan",
+    "center_lat": 43.8332,
+    "center_lon": 10.5800,
+    "radius_km": 25.0
+  }
+]
