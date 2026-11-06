@@ -1,0 +1,31 @@
+{
+  "reg": "D-FGMG",
+  "dropzone": "Skydive Salerno",
+  "date": "2026-10-04",
+  "time": "11:30",
+  "stats": {
+    "altitude_m": 3931,
+    "heading_deg": 41,
+    "ground_speed_kt": 80.8,
+    "separation_sec": 7.2,
+    "duration_sec": 7
+  },
+  "points": [
+    {
+      "lat": 40.465996,
+      "lon": 14.952526
+    },
+    {
+      "lat": 40.466602,
+      "lon": 14.953197
+    },
+    {
+      "lat": 40.467316,
+      "lon": 14.954068
+    },
+    {
+      "lat": 40.467968,
+      "lon": 14.954742
+    }
+  ]
+}

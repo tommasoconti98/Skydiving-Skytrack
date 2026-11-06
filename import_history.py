@@ -3,6 +3,7 @@ import csv
 import json
 import datetime
 import subprocess
+from collections import defaultdict
 
 REPO_DIR = os.path.expanduser("~/Skydiving-Skytrack")
 IMPORTS_DIR = os.path.join(REPO_DIR, "imports")
@@ -47,22 +48,28 @@ def parse_fr24_csv(filepath):
                 })
             except Exception:
                 continue
-
-    points.sort(key=lambda x: x["time"])
     return points
 
 def extract_jump_runs_by_decollo(points):
-    """Isola i run-in e li raggruppa cronologicamente per decollo/ciclo di salita."""
+    """Isola i run-in cronologici e li raggruppa per decollo/ciclo di salita."""
     if len(points) < 10:
         return []
 
-    # Calcolo variometro (ft/min)
+    # 1. Deduplica e ordina per timestamp
+    points.sort(key=lambda x: x["time"])
+    dedup = [points[0]]
+    for p in points[1:]:
+        if p["time"] != dedup[-1]["time"]:
+            dedup.append(p)
+    points = dedup
+
+    # 2. Calcolo variometro (ft/min)
     for i in range(1, len(points)):
         dt = points[i]["time"] - points[i - 1]["time"]
         points[i]["v_rate_fpm"] = ((points[i]["alt_ft"] - points[i - 1]["alt_ft"]) / dt * 60.0) if dt > 0 else 0.0
     points[0]["v_rate_fpm"] = 0.0
 
-    # Rilevamento picchiate post-lancio (< -1500 ft/min)
+    # 3. Rilevamento picchiate post-lancio (< -1500 ft/min)
     descents = [i for i, p in enumerate(points) if p["v_rate_fpm"] < -1500]
     if not descents:
         return []
@@ -81,7 +88,6 @@ def extract_jump_runs_by_decollo(points):
     for event in dive_events:
         dive_start = event[0]
         run_seg = []
-        # Cerca all'indietro il tratto livellato del lancio
         for i in range(dive_start - 1, max(-1, dive_start - 35), -1):
             p = points[i]
             if p["alt_m"] >= 2800 and abs(p["v_rate_fpm"]) < 1000 and 50 <= p["speed_kt"] <= 120:
@@ -92,13 +98,13 @@ def extract_jump_runs_by_decollo(points):
         if len(run_seg) >= 4:
             all_runs.append(run_seg)
 
-    # Rimuove sovrapposizioni
+    # 4. Rimuove sovrapposizioni
     unique_runs = []
     for r in all_runs:
         if not unique_runs or r[0]["time"] > unique_runs[-1][-1]["time"] + 30:
             unique_runs.append(r)
 
-    # Raggruppa i lanci per ciclo di decollo (stacco di oltre 15 minuti tra un volo e l'altro)
+    # 5. Raggruppa per stacco temporale tra decolli (> 15 minuti di intervallo)
     decolli = []
     curr_decollo = []
     for r in unique_runs:
@@ -126,10 +132,10 @@ def process_all_imports():
         print("Nessun CSV trovato in imports/")
         return
 
-    with open(INDEX_PATH, "r") as f:
-        master_index = json.load(f)
+    print(f"📂 Trovati {len(csv_files)} file CSV. Inizio aggregazione...")
 
-    total_imported = 0
+    # Raggruppa tutti i punti per (aereo, data_utc)
+    points_by_ac_date = defaultdict(list)
 
     for fname in csv_files:
         fpath = os.path.join(IMPORTS_DIR, fname)
@@ -140,18 +146,30 @@ def process_all_imports():
                 break
 
         if not matched_reg:
-            print(f"⚠️ Nessun aereo della flotta corrisponde al file: {fname}")
+            print(f"⚠️ Ignorato file non associabile alla flotta: {fname}")
             continue
 
-        raw_points = parse_fr24_csv(fpath)
-        decolli = extract_jump_runs_by_decollo(raw_points)
-        print(f"📄 Analisi {fname}: individuati {len(decolli)} decolli.")
+        pts = parse_fr24_csv(fpath)
+        for p in pts:
+            dt = datetime.datetime.fromtimestamp(p["time"], tz=datetime.timezone.utc)
+            d_str = dt.strftime("%Y-%m-%d")
+            points_by_ac_date[(matched_reg, d_str)].append(p)
 
-        ac_dir = os.path.join(RUNS_DIR, matched_reg)
+    with open(INDEX_PATH, "r") as f:
+        master_index = json.load(f)
+
+    total_runs_imported = 0
+
+    # Elabora giorno per giorno in ordine cronologico crescente
+    for (reg, d_str), raw_points in sorted(points_by_ac_date.items()):
+        decolli = extract_jump_runs_by_decollo(raw_points)
+        print(f"\n🗓️  {reg} - Data {d_str}: estratti {len(decolli)} decolli totali.")
+
+        ac_dir = os.path.join(RUNS_DIR, reg)
         os.makedirs(ac_dir, exist_ok=True)
 
-        for d_idx, runs_in_decollo in enumerate(decolli, 1):
-            for r_idx, run_segment in enumerate(runs_in_decollo, 1):
+        for d_idx, runs_in_dec in enumerate(decolli, 1):
+            for r_idx, run_segment in enumerate(runs_in_dec, 1):
                 duration = int(run_segment[-1]["time"] - run_segment[0]["time"])
                 avg_speed = round(sum(p["speed_kt"] for p in run_segment) / len(run_segment), 1)
                 avg_track = int(sum(p["track"] for p in run_segment) / len(run_segment))
@@ -161,17 +179,16 @@ def process_all_imports():
                 sep_300m = round(300.0 / speed_mps, 1) if speed_mps > 0 else 0
 
                 dt = datetime.datetime.fromtimestamp(run_segment[0]["time"], tz=datetime.timezone.utc)
-                date_str = dt.strftime("%Y-%m-%d")
                 time_str = dt.strftime("%H:%M")
 
-                title = f"Decollo #{d_idx}" if len(runs_in_decollo) == 1 else f"Decollo #{d_idx} (Lancio {r_idx})"
-                run_filename = f"{date_str}_dec_{d_idx:02d}_{r_idx:02d}.json"
+                title = f"Decollo #{d_idx}" if len(runs_in_dec) == 1 else f"Decollo #{d_idx} (Lancio {r_idx})"
+                run_filename = f"{d_str}_dec_{d_idx:02d}_{r_idx:02d}.json"
                 run_filepath = os.path.join(ac_dir, run_filename)
 
                 run_data = {
-                    "reg": matched_reg,
-                    "dropzone": fleet[matched_reg]["name"],
-                    "date": date_str,
+                    "reg": reg,
+                    "dropzone": fleet[reg]["name"],
+                    "date": d_str,
                     "time": time_str,
                     "stats": {
                         "altitude_m": exit_alt,
@@ -187,12 +204,11 @@ def process_all_imports():
                     json.dump(run_data, rf, indent=2)
 
                 for ac_entry in master_index["aircrafts"]:
-                    if ac_entry["reg"] == matched_reg:
-                        # Rimuove duplicati se rieseguito
-                        ac_entry["runs"] = [x for x in ac_entry["runs"] if x["file"] != f"{matched_reg}/{run_filename}"]
+                    if ac_entry["reg"] == reg:
+                        ac_entry["runs"] = [x for x in ac_entry["runs"] if x["file"] != f"{reg}/{run_filename}"]
                         ac_entry["runs"].append({
-                            "file": f"{matched_reg}/{run_filename}",
-                            "date": date_str,
+                            "file": f"{reg}/{run_filename}",
+                            "date": d_str,
                             "time": time_str,
                             "title": title,
                             "duration_sec": duration,
@@ -202,19 +218,21 @@ def process_all_imports():
                         ac_entry["runs"].sort(key=lambda x: f"{x['date']} {x['time']}", reverse=True)
                         break
 
-                total_imported += 1
-                print(f"  ✅ {title} [{time_str} UTC] -> Quota: {exit_alt}m | Asse: {avg_track}° | GS: {avg_speed}kt | Sep: {sep_300m}s")
+                total_runs_imported += 1
+                print(f"   ▶ {title} [{time_str} UTC] Quota: {exit_alt}m | HDG: {avg_track}° | GS: {avg_speed}kt | Sep: {sep_300m}s")
 
-    if total_imported > 0:
+    if total_runs_imported > 0:
         master_index["last_updated"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         with open(INDEX_PATH, "w") as f:
             json.dump(master_index, f, indent=2)
 
-        print("\nSincronizzazione archivio su GitHub Pages in corso...")
+        print("\n☁️  Sincronizzazione su GitHub in corso...")
         subprocess.run(["git", "-C", REPO_DIR, "add", "."], check=True)
-        subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", f"Importati {total_imported} decolli storici"], check=True)
+        subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", f"Importati {total_runs_imported} lanci storici"], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-        print("🎉 Fatto! Tutti i decolli sono online.")
+        print("✅ Storico aggiornato e pubblicato su GitHub Pages!")
+    else:
+        print("Nessun nuovo lancio importato.")
 
 if __name__ == "__main__":
     process_all_imports()
