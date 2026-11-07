@@ -25,7 +25,7 @@ def load_fleet_config():
             fleet_list = json.load(f)
             return {ac["reg"]: ac for ac in fleet_list}
     except Exception as e:
-        print("Errore lettura aircraft.json:", e)
+        print(f"❌ Errore lettura aircraft.json: {e}")
         return {}
 
 def ensure_master_index(fleet_dict):
@@ -64,45 +64,120 @@ def get_fr24_url(lat, lon, radius_km):
         f"&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=0&air=1&vehicles=0&estimated=1"
     )
 
+def circular_mean_heading(angles_deg):
+    """Calcola la media vettoriale della prua per evitare errori a cavallo dello zero/Nord."""
+    x = sum(math.cos(math.radians(a)) for a in angles_deg)
+    y = sum(math.sin(math.radians(a)) for a in angles_deg)
+    return round(math.degrees(math.atan2(y, x)) % 360)
+
 class RunTracker:
     def __init__(self, reg, info):
         self.reg = reg
         self.info = info
-        self.state = "IDLE"
+        self.state = "IDLE"  # IDLE, RUN_IN
         self.buffer = []
+        self.last_altitude_logged = 0
+        self.last_seen = 0
+        self.last_point = None
+        self.max_alt_m = 0
 
-    def process_point(self, lat, lon, track, alt_ft, speed_kt, v_rate_fpm):
+    def process_point(self, lat, lon, track, alt_ft, speed_kt, feed_vrt):
         now = time.time()
         alt_m = int(alt_ft * 0.3048)
+        self.last_seen = now
 
+        # Calcolo autonomo del variometro (ft/min)
+        calc_v_rate = feed_vrt
+        turn_rate = 0.0
+        if self.last_point is not None:
+            dt = now - self.last_point["time"]
+            if dt > 0:
+                derived_vs = ((alt_ft - self.last_point["alt_ft"]) / dt) * 60.0
+                if abs(feed_vrt) < 50:
+                    calc_v_rate = derived_vs
+                else:
+                    calc_v_rate = min(feed_vrt, derived_vs)
+
+                d_trk = abs((track - self.last_point["track"] + 180) % 360 - 180)
+                turn_rate = d_trk / dt
+
+        v_rate_fpm = calc_v_rate
         point = {
             "time": now, "lat": lat, "lon": lon, "track": track,
-            "alt_m": alt_m, "speed_kt": speed_kt, "v_rate": v_rate_fpm
+            "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm
         }
 
+        # Log informativo ogni 1.000 metri di salita
+        if abs(alt_m - self.last_altitude_logged) >= 1000:
+            print(f"📡 [{self.reg}] Quota {alt_m}m | GS: {speed_kt} kt | V/S: {int(v_rate_fpm)} ft/min")
+            self.last_altitude_logged = alt_m
+
+        # 1. Inizio RUN-IN
         if self.state == "IDLE":
-            if alt_m >= 2800 and abs(v_rate_fpm) < 500 and 65 <= speed_kt <= 110:
-                print(f"[{self.reg}] Inizio RUN-IN a {alt_m}m!")
+            is_level = -800 < v_rate_fpm < 600
+            is_straight = turn_rate < 3.5
+            is_drop_speed = 45 <= speed_kt <= 88
+
+            if alt_m >= 2800 and is_level and is_straight and is_drop_speed:
+                print(f"🚀 [{self.reg}] INIZIO RUN-IN a {alt_m}m! (Prua: {track}°, GS: {speed_kt}kt)")
                 self.state = "RUN_IN"
+                self.max_alt_m = alt_m
                 self.buffer = [point]
 
+        # 2. Registrazione RUN-IN
         elif self.state == "RUN_IN":
-            self.buffer.append(point)
+            if alt_m > self.max_alt_m:
+                self.max_alt_m = alt_m
 
-            if v_rate_fpm <= -1800:
-                print(f"[{self.reg}] Fine RUN-IN (Picchiata: {v_rate_fpm} ft/min).")
-                if len(self.buffer) >= 6:
-                    self.finalize_run()
+            # Reset se era solo una virata intermedia e l'aereo continua a salire
+            if alt_m > (self.buffer[0]["alt_m"] + 150):
+                print(f"🔄 [{self.reg}] Salita continua ({alt_m}m): ripristino monitoraggio.")
                 self.reset()
-            elif (now - self.buffer[0]["time"]) > 240:
-                print(f"[{self.reg}] Timeout durata superato.")
+                self.last_point = point
+                return
+
+            # Rilevamento picchiata
+            is_dive = (
+                (alt_m < (self.max_alt_m - 140)) or
+                (v_rate_fpm <= -3000) or
+                (v_rate_fpm <= -1800 and speed_kt >= 90) or
+                (alt_m < 2600)
+            )
+
+            if is_dive:
+                print(f"🎯 [{self.reg}] PICCHIATA RILEVATA! V/S: {int(v_rate_fpm)} ft/min (Quota: {alt_m}m).")
+                self.finalize_run()
+                self.reset()
+            else:
+                self.buffer.append(point)
+                # Timeout di sicurezza: se dopo 150s è ancora in quota, salva il lancio
+                if (now - self.buffer[0]["time"]) > 150:
+                    print(f"⏱️ [{self.reg}] Chiusura run-in per timeout durata (150s).")
+                    self.finalize_run()
+                    self.reset()
+
+        self.last_point = point
+
+    def check_signal_timeout(self):
+        """Se l'aereo sparisce dal radar mentre picchiava, finalizza il lancio senza perdere i dati."""
+        if self.state == "RUN_IN" and self.last_seen > 0:
+            if (time.time() - self.last_seen) > 25:
+                print(f"🎯 [{self.reg}] Segnale radar perso in discesa: finalizzazione lancio in corso...")
+                self.finalize_run()
                 self.reset()
 
     def finalize_run(self):
-        duration = int(self.buffer[-1]["time"] - self.buffer[0]["time"])
-        avg_speed = round(sum(p["speed_kt"] for p in self.buffer) / len(self.buffer), 1)
-        avg_track = int(sum(p["track"] for p in self.buffer) / len(self.buffer))
-        exit_alt = self.buffer[0]["alt_m"]
+        valid = [p for p in self.buffer if p["alt_m"] >= (self.max_alt_m - 90)]
+        if len(valid) < 4:
+            return
+
+        duration = int(valid[-1]["time"] - valid[0]["time"])
+        if duration < 12:
+            return
+
+        avg_speed = round(sum(p["speed_kt"] for p in valid) / len(valid), 1)
+        avg_track = circular_mean_heading([p["track"] for p in valid])
+        exit_alt = valid[0]["alt_m"]
 
         speed_mps = avg_speed * 0.514444
         sep_300m = round(300.0 / speed_mps, 1) if speed_mps > 0 else 0
@@ -131,13 +206,13 @@ class RunTracker:
                 "separation_sec": sep_300m,
                 "duration_sec": duration
             },
-            "points": [{"lat": p["lat"], "lon": p["lon"]} for p in self.buffer]
+            "points": [{"lat": p["lat"], "lon": p["lon"]} for p in valid]
         }
 
         with open(file_path, "w") as f:
             json.dump(run_data, f, indent=2)
 
-        print(f"[{self.reg}] File run scritto: {file_name}")
+        print(f"💾 [{self.reg}] Lancio #{run_num} salvato! (Asse: {avg_track}°, GS: {avg_speed}kt, Quota: {exit_alt}m, Sep: {sep_300m}s)")
         update_master_index(self.reg, file_name, date_str, time_str, duration, avg_track, avg_speed)
         clean_old_runs()
         push_to_github(f"Nuovo lancio {self.reg} #{run_num} - {date_str}")
@@ -145,6 +220,7 @@ class RunTracker:
     def reset(self):
         self.state = "IDLE"
         self.buffer = []
+        self.max_alt_m = 0
 
 def update_master_index(reg, rel_file, date_str, time_str, duration, heading, speed):
     index_path = os.path.join(DATA_DIR, "index.json")
@@ -157,7 +233,7 @@ def update_master_index(reg, rel_file, date_str, time_str, duration, heading, sp
                 "file": f"{reg}/{rel_file}",
                 "date": date_str,
                 "time": time_str,
-                "title": f"Lancio #{len(ac['runs']) + 1}",
+                "title": f"Decollo #{len(ac['runs']) + 1}",
                 "duration_sec": duration,
                 "heading_deg": heading,
                 "speed_kt": speed
@@ -204,29 +280,34 @@ def push_to_github(msg):
         subprocess.run(["git", "-C", REPO_DIR, "add", "."], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", msg], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-        print(">> Repository sincronizzato.")
+        print("☁️ Repository GitHub aggiornato in diretta!")
     except Exception as e:
-        print("Errore push:", e)
+        print(f"❌ Errore sincronizzazione GitHub: {e}")
 
 def main():
     git_pull()
     fleet = load_fleet_config()
     ensure_master_index(fleet)
     trackers = {reg: RunTracker(reg, info) for reg, info in fleet.items()}
-    print(f"Monitor attivo su watchlist: {list(trackers.keys())}")
+    print(f"🟢 SkyTrack Monitor avviato! Aerei monitorati: {list(trackers.keys())}")
 
     last_pull_time = time.time()
+    last_heartbeat = time.time()
 
     while True:
-        # Controllo automatico ogni 24 ore (86400 secondi)
-        if time.time() - last_pull_time > 86400:
+        now = time.time()
+
+        if now - last_pull_time > 86400:
             git_pull()
             new_fleet = load_fleet_config()
             for r, inf in new_fleet.items():
                 if r not in trackers:
-                    print(f"Nuovo aereo aggiunto dinamicamente: {r}")
                     trackers[r] = RunTracker(r, inf)
-            last_pull_time = time.time()
+            last_pull_time = now
+
+        if now - last_heartbeat > 1800:
+            print(f"💓 [HEARTBEAT] Monitor attivo su {len(trackers)} dropzone.")
+            last_heartbeat = now
 
         for reg, tracker in list(trackers.items()):
             url = get_fr24_url(tracker.info["center_lat"], tracker.info["center_lon"], tracker.info["radius_km"])
@@ -234,10 +315,12 @@ def main():
                 r = requests.get(url, headers=HEADERS, timeout=5)
                 if r.status_code == 200:
                     feed = r.json()
+                    plane_found = False
                     for k, val in feed.items():
                         if k in ["full_count", "version"]: continue
                         plane_reg = val[9] if len(val) > 9 else ""
                         if plane_reg == reg:
+                            plane_found = True
                             lat = val[1]
                             lon = val[2]
                             trk = val[3] or 0
@@ -245,8 +328,12 @@ def main():
                             spd = val[5] or 0
                             vrt = val[15] or 0
                             tracker.process_point(lat, lon, trk, alt, spd, vrt)
+
+                    if not plane_found:
+                        tracker.check_signal_timeout()
             except Exception:
                 pass
+
         time.sleep(6)
 
 if __name__ == "__main__":
