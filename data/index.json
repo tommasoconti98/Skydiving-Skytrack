@@ -154,6 +154,15 @@
       "model": "Pilatus PC-6",
       "runs": [
         {
+          "file": "D-FSKY/2026-11-07_run_04.json",
+          "date": "2026-11-07",
+          "time": "12:55",
+          "title": "Decollo #36",
+          "duration_sec": 32,
+          "heading_deg": 278,
+          "speed_kt": 54.2
+        },
+        {
           "file": "D-FSKY/2026-11-07_run_03.json",
           "date": "2026-11-07",
           "time": "12:33",
@@ -1133,5 +1142,5 @@
       ]
     }
   ],
-  "last_updated": "2026-11-07T12:49:37.317521+00:00"
+  "last_updated": "2026-11-07T12:55:27.885190+00:00"
 }
