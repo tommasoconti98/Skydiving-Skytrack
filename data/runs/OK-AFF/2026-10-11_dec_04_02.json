@@ -1,0 +1,31 @@
+{
+  "reg": "OK-AFF",
+  "dropzone": "Costa D'ARgento",
+  "date": "2026-10-11",
+  "time": "10:35",
+  "stats": {
+    "altitude_m": 4084,
+    "heading_deg": 11,
+    "ground_speed_kt": 70.8,
+    "separation_sec": 8.2,
+    "duration_sec": 8
+  },
+  "points": [
+    {
+      "lat": 42.50238,
+      "lon": 11.247491
+    },
+    {
+      "lat": 42.503284,
+      "lon": 11.247678
+    },
+    {
+      "lat": 42.503952,
+      "lon": 11.247885
+    },
+    {
+      "lat": 42.50465,
+      "lon": 11.248138
+    }
+  ]
+}

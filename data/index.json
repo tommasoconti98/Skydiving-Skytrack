@@ -1246,8 +1246,621 @@
       "reg": "OK-AFF",
       "name": "OK-AFF - Costa D'ARgento",
       "model": "Pilatus PC-6",
-      "runs": []
+      "runs": [
+        {
+          "file": "OK-AFF/2026-11-01_dec_03_01.json",
+          "date": "2026-11-01",
+          "time": "10:15",
+          "title": "Decollo #3",
+          "duration_sec": 9,
+          "heading_deg": 7,
+          "speed_kt": 61.2
+        },
+        {
+          "file": "OK-AFF/2026-11-01_dec_02_01.json",
+          "date": "2026-11-01",
+          "time": "09:44",
+          "title": "Decollo #2",
+          "duration_sec": 10,
+          "heading_deg": 23,
+          "speed_kt": 70.0
+        },
+        {
+          "file": "OK-AFF/2026-11-01_dec_01_01.json",
+          "date": "2026-11-01",
+          "time": "09:18",
+          "title": "Decollo #1",
+          "duration_sec": 7,
+          "heading_deg": 357,
+          "speed_kt": 68.8
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_08_01.json",
+          "date": "2026-10-31",
+          "time": "16:12",
+          "title": "Decollo #8",
+          "duration_sec": 10,
+          "heading_deg": 144,
+          "speed_kt": 78.6
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_07_01.json",
+          "date": "2026-10-31",
+          "time": "15:51",
+          "title": "Decollo #7",
+          "duration_sec": 8,
+          "heading_deg": 22,
+          "speed_kt": 65.2
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_06_02.json",
+          "date": "2026-10-31",
+          "time": "14:59",
+          "title": "Decollo #6 (Lancio 2)",
+          "duration_sec": 6,
+          "heading_deg": 91,
+          "speed_kt": 53.5
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_06_01.json",
+          "date": "2026-10-31",
+          "time": "14:57",
+          "title": "Decollo #6 (Lancio 1)",
+          "duration_sec": 24,
+          "heading_deg": 18,
+          "speed_kt": 82.5
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_05_01.json",
+          "date": "2026-10-31",
+          "time": "13:57",
+          "title": "Decollo #5",
+          "duration_sec": 24,
+          "heading_deg": 9,
+          "speed_kt": 85.5
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_04_01.json",
+          "date": "2026-10-31",
+          "time": "13:36",
+          "title": "Decollo #4",
+          "duration_sec": 22,
+          "heading_deg": 10,
+          "speed_kt": 85.7
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_03_02.json",
+          "date": "2026-10-31",
+          "time": "12:16",
+          "title": "Decollo #3 (Lancio 2)",
+          "duration_sec": 12,
+          "heading_deg": 7,
+          "speed_kt": 69.3
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_03_01.json",
+          "date": "2026-10-31",
+          "time": "12:15",
+          "title": "Decollo #3 (Lancio 1)",
+          "duration_sec": 11,
+          "heading_deg": 7,
+          "speed_kt": 80.8
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_02_01.json",
+          "date": "2026-10-31",
+          "time": "10:29",
+          "title": "Decollo #2",
+          "duration_sec": 8,
+          "heading_deg": 9,
+          "speed_kt": 65.2
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_01_02.json",
+          "date": "2026-10-31",
+          "time": "10:03",
+          "title": "Decollo #1 (Lancio 2)",
+          "duration_sec": 12,
+          "heading_deg": 3,
+          "speed_kt": 66.0
+        },
+        {
+          "file": "OK-AFF/2026-10-31_dec_01_01.json",
+          "date": "2026-10-31",
+          "time": "10:02",
+          "title": "Decollo #1 (Lancio 1)",
+          "duration_sec": 14,
+          "heading_deg": 303,
+          "speed_kt": 78.4
+        },
+        {
+          "file": "OK-AFF/2026-10-18_dec_03_01.json",
+          "date": "2026-10-18",
+          "time": "09:59",
+          "title": "Decollo #3",
+          "duration_sec": 21,
+          "heading_deg": 189,
+          "speed_kt": 73.9
+        },
+        {
+          "file": "OK-AFF/2026-10-18_dec_02_01.json",
+          "date": "2026-10-18",
+          "time": "09:33",
+          "title": "Decollo #2",
+          "duration_sec": 24,
+          "heading_deg": 196,
+          "speed_kt": 63.7
+        },
+        {
+          "file": "OK-AFF/2026-10-18_dec_01_01.json",
+          "date": "2026-10-18",
+          "time": "08:31",
+          "title": "Decollo #1",
+          "duration_sec": 26,
+          "heading_deg": 141,
+          "speed_kt": 93.7
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_10_01.json",
+          "date": "2026-10-17",
+          "time": "16:37",
+          "title": "Decollo #10",
+          "duration_sec": 17,
+          "heading_deg": 189,
+          "speed_kt": 80.0
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_09_01.json",
+          "date": "2026-10-17",
+          "time": "15:35",
+          "title": "Decollo #9",
+          "duration_sec": 9,
+          "heading_deg": 124,
+          "speed_kt": 80.4
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_08_02.json",
+          "date": "2026-10-17",
+          "time": "14:30",
+          "title": "Decollo #8 (Lancio 2)",
+          "duration_sec": 14,
+          "heading_deg": 208,
+          "speed_kt": 64.7
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_08_01.json",
+          "date": "2026-10-17",
+          "time": "14:29",
+          "title": "Decollo #8 (Lancio 1)",
+          "duration_sec": 7,
+          "heading_deg": 183,
+          "speed_kt": 73.8
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_07_01.json",
+          "date": "2026-10-17",
+          "time": "14:00",
+          "title": "Decollo #7",
+          "duration_sec": 12,
+          "heading_deg": 145,
+          "speed_kt": 85.3
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_06_02.json",
+          "date": "2026-10-17",
+          "time": "12:45",
+          "title": "Decollo #6 (Lancio 2)",
+          "duration_sec": 14,
+          "heading_deg": 357,
+          "speed_kt": 61.9
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_06_01.json",
+          "date": "2026-10-17",
+          "time": "12:44",
+          "title": "Decollo #6 (Lancio 1)",
+          "duration_sec": 15,
+          "heading_deg": 9,
+          "speed_kt": 73.2
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_05_01.json",
+          "date": "2026-10-17",
+          "time": "12:18",
+          "title": "Decollo #5",
+          "duration_sec": 7,
+          "heading_deg": 16,
+          "speed_kt": 70.5
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_04_01.json",
+          "date": "2026-10-17",
+          "time": "10:28",
+          "title": "Decollo #4",
+          "duration_sec": 22,
+          "heading_deg": 14,
+          "speed_kt": 86.4
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_03_01.json",
+          "date": "2026-10-17",
+          "time": "09:25",
+          "title": "Decollo #3",
+          "duration_sec": 10,
+          "heading_deg": 17,
+          "speed_kt": 66.2
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_02_01.json",
+          "date": "2026-10-17",
+          "time": "09:00",
+          "title": "Decollo #2",
+          "duration_sec": 14,
+          "heading_deg": 5,
+          "speed_kt": 56.3
+        },
+        {
+          "file": "OK-AFF/2026-10-17_dec_01_01.json",
+          "date": "2026-10-17",
+          "time": "08:39",
+          "title": "Decollo #1",
+          "duration_sec": 19,
+          "heading_deg": 50,
+          "speed_kt": 70.3
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_09_01.json",
+          "date": "2026-10-11",
+          "time": "14:55",
+          "title": "Decollo #9",
+          "duration_sec": 14,
+          "heading_deg": 9,
+          "speed_kt": 73.7
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_08_01.json",
+          "date": "2026-10-11",
+          "time": "13:41",
+          "title": "Decollo #8",
+          "duration_sec": 16,
+          "heading_deg": 12,
+          "speed_kt": 84.6
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_07_01.json",
+          "date": "2026-10-11",
+          "time": "12:39",
+          "title": "Decollo #7",
+          "duration_sec": 9,
+          "heading_deg": 14,
+          "speed_kt": 77.4
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_06_02.json",
+          "date": "2026-10-11",
+          "time": "11:24",
+          "title": "Decollo #6 (Lancio 2)",
+          "duration_sec": 7,
+          "heading_deg": 1,
+          "speed_kt": 69.0
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_06_01.json",
+          "date": "2026-10-11",
+          "time": "11:23",
+          "title": "Decollo #6 (Lancio 1)",
+          "duration_sec": 18,
+          "heading_deg": 8,
+          "speed_kt": 74.9
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_05_02.json",
+          "date": "2026-10-11",
+          "time": "10:59",
+          "title": "Decollo #5 (Lancio 2)",
+          "duration_sec": 20,
+          "heading_deg": 8,
+          "speed_kt": 70.3
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_05_01.json",
+          "date": "2026-10-11",
+          "time": "10:58",
+          "title": "Decollo #5 (Lancio 1)",
+          "duration_sec": 11,
+          "heading_deg": 4,
+          "speed_kt": 74.0
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_04_02.json",
+          "date": "2026-10-11",
+          "time": "10:35",
+          "title": "Decollo #4 (Lancio 2)",
+          "duration_sec": 8,
+          "heading_deg": 11,
+          "speed_kt": 70.8
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_04_01.json",
+          "date": "2026-10-11",
+          "time": "10:34",
+          "title": "Decollo #4 (Lancio 1)",
+          "duration_sec": 23,
+          "heading_deg": 12,
+          "speed_kt": 73.6
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_03_01.json",
+          "date": "2026-10-11",
+          "time": "09:23",
+          "title": "Decollo #3",
+          "duration_sec": 38,
+          "heading_deg": 8,
+          "speed_kt": 75.2
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_02_01.json",
+          "date": "2026-10-11",
+          "time": "08:58",
+          "title": "Decollo #2",
+          "duration_sec": 30,
+          "heading_deg": 12,
+          "speed_kt": 72.6
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_01_01.json",
+          "date": "2026-10-11",
+          "time": "08:32",
+          "title": "Decollo #1 (Lancio 1)",
+          "duration_sec": 16,
+          "heading_deg": 13,
+          "speed_kt": 70.7
+        },
+        {
+          "file": "OK-AFF/2026-10-11_dec_01_02.json",
+          "date": "2026-10-11",
+          "time": "08:32",
+          "title": "Decollo #1 (Lancio 2)",
+          "duration_sec": 9,
+          "heading_deg": 9,
+          "speed_kt": 69.0
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_09_01.json",
+          "date": "2026-10-10",
+          "time": "16:36",
+          "title": "Decollo #9",
+          "duration_sec": 48,
+          "heading_deg": 173,
+          "speed_kt": 68.7
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_08_01.json",
+          "date": "2026-10-10",
+          "time": "15:31",
+          "title": "Decollo #8",
+          "duration_sec": 7,
+          "heading_deg": 1,
+          "speed_kt": 71.2
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_07_01.json",
+          "date": "2026-10-10",
+          "time": "15:12",
+          "title": "Decollo #7",
+          "duration_sec": 57,
+          "heading_deg": 4,
+          "speed_kt": 70.5
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_06_02.json",
+          "date": "2026-10-10",
+          "time": "13:51",
+          "title": "Decollo #6 (Lancio 2)",
+          "duration_sec": 11,
+          "heading_deg": 16,
+          "speed_kt": 74.7
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_06_01.json",
+          "date": "2026-10-10",
+          "time": "13:50",
+          "title": "Decollo #6 (Lancio 1)",
+          "duration_sec": 25,
+          "heading_deg": 11,
+          "speed_kt": 79.0
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_05_01.json",
+          "date": "2026-10-10",
+          "time": "13:28",
+          "title": "Decollo #5",
+          "duration_sec": 25,
+          "heading_deg": 10,
+          "speed_kt": 72.7
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_04_01.json",
+          "date": "2026-10-10",
+          "time": "11:34",
+          "title": "Decollo #4",
+          "duration_sec": 47,
+          "heading_deg": 18,
+          "speed_kt": 83.3
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_03_01.json",
+          "date": "2026-10-10",
+          "time": "11:10",
+          "title": "Decollo #3",
+          "duration_sec": 8,
+          "heading_deg": 12,
+          "speed_kt": 84.8
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_02_01.json",
+          "date": "2026-10-10",
+          "time": "09:47",
+          "title": "Decollo #2",
+          "duration_sec": 29,
+          "heading_deg": 17,
+          "speed_kt": 78.0
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_01_02.json",
+          "date": "2026-10-10",
+          "time": "09:20",
+          "title": "Decollo #1 (Lancio 2)",
+          "duration_sec": 15,
+          "heading_deg": 7,
+          "speed_kt": 86.1
+        },
+        {
+          "file": "OK-AFF/2026-10-10_dec_01_01.json",
+          "date": "2026-10-10",
+          "time": "09:19",
+          "title": "Decollo #1 (Lancio 1)",
+          "duration_sec": 9,
+          "heading_deg": 54,
+          "speed_kt": 92.2
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_10_01.json",
+          "date": "2026-10-03",
+          "time": "16:38",
+          "title": "Decollo #10",
+          "duration_sec": 7,
+          "heading_deg": 198,
+          "speed_kt": 64.8
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_09_03.json",
+          "date": "2026-10-03",
+          "time": "15:45",
+          "title": "Decollo #9 (Lancio 3)",
+          "duration_sec": 8,
+          "heading_deg": 185,
+          "speed_kt": 67.8
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_09_02.json",
+          "date": "2026-10-03",
+          "time": "15:44",
+          "title": "Decollo #9 (Lancio 2)",
+          "duration_sec": 12,
+          "heading_deg": 194,
+          "speed_kt": 73.7
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_09_01.json",
+          "date": "2026-10-03",
+          "time": "15:43",
+          "title": "Decollo #9 (Lancio 1)",
+          "duration_sec": 7,
+          "heading_deg": 192,
+          "speed_kt": 75.8
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_08_01.json",
+          "date": "2026-10-03",
+          "time": "14:57",
+          "title": "Decollo #8",
+          "duration_sec": 9,
+          "heading_deg": 192,
+          "speed_kt": 75.2
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_07_02.json",
+          "date": "2026-10-03",
+          "time": "13:57",
+          "title": "Decollo #7 (Lancio 2)",
+          "duration_sec": 10,
+          "heading_deg": 75,
+          "speed_kt": 80.2
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_07_01.json",
+          "date": "2026-10-03",
+          "time": "13:56",
+          "title": "Decollo #7 (Lancio 1)",
+          "duration_sec": 17,
+          "heading_deg": 196,
+          "speed_kt": 71.9
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_06_01.json",
+          "date": "2026-10-03",
+          "time": "13:35",
+          "title": "Decollo #6",
+          "duration_sec": 8,
+          "heading_deg": 199,
+          "speed_kt": 71.2
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_05_01.json",
+          "date": "2026-10-03",
+          "time": "11:58",
+          "title": "Decollo #5",
+          "duration_sec": 15,
+          "heading_deg": 207,
+          "speed_kt": 67.9
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_04_02.json",
+          "date": "2026-10-03",
+          "time": "11:38",
+          "title": "Decollo #4 (Lancio 2)",
+          "duration_sec": 12,
+          "heading_deg": 213,
+          "speed_kt": 63.3
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_04_01.json",
+          "date": "2026-10-03",
+          "time": "11:37",
+          "title": "Decollo #4 (Lancio 1)",
+          "duration_sec": 14,
+          "heading_deg": 201,
+          "speed_kt": 72.3
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_03_01.json",
+          "date": "2026-10-03",
+          "time": "10:10",
+          "title": "Decollo #3",
+          "duration_sec": 38,
+          "heading_deg": 191,
+          "speed_kt": 70.0
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_02_01.json",
+          "date": "2026-10-03",
+          "time": "08:57",
+          "title": "Decollo #2",
+          "duration_sec": 10,
+          "heading_deg": 205,
+          "speed_kt": 71.0
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_01_02.json",
+          "date": "2026-10-03",
+          "time": "08:31",
+          "title": "Decollo #1 (Lancio 2)",
+          "duration_sec": 9,
+          "heading_deg": 202,
+          "speed_kt": 71.0
+        },
+        {
+          "file": "OK-AFF/2026-10-03_dec_01_01.json",
+          "date": "2026-10-03",
+          "time": "08:30",
+          "title": "Decollo #1 (Lancio 1)",
+          "duration_sec": 16,
+          "heading_deg": 186,
+          "speed_kt": 84.0
+        }
+      ]
     }
   ],
-  "last_updated": "2026-11-06T15:44:42.407316+00:00"
+  "last_updated": "2026-11-07T00:06:18.642400+00:00"
 }
