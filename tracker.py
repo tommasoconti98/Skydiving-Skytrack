@@ -65,7 +65,6 @@ def get_fr24_url(lat, lon, radius_km):
     )
 
 def circular_mean_heading(angles_deg):
-    """Calcola la media vettoriale della prua per evitare errori a cavallo dello zero/Nord."""
     x = sum(math.cos(math.radians(a)) for a in angles_deg)
     y = sum(math.sin(math.radians(a)) for a in angles_deg)
     return round(math.degrees(math.atan2(y, x)) % 360)
@@ -86,7 +85,7 @@ class RunTracker:
         alt_m = int(alt_ft * 0.3048)
         self.last_seen = now
 
-        # Calcolo autonomo del variometro (ft/min)
+        # Calcolo autonomo del variometro e del rateo di virata
         calc_v_rate = feed_vrt
         turn_rate = 0.0
         if self.last_point is not None:
@@ -104,43 +103,48 @@ class RunTracker:
         v_rate_fpm = calc_v_rate
         point = {
             "time": now, "lat": lat, "lon": lon, "track": track,
-            "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm
+            "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, 
+            "v_rate": v_rate_fpm, "turn_rate": turn_rate
         }
 
-        # Log informativo ogni 1.000 metri di salita
+        # Log quota ogni 1000m di salita
         if abs(alt_m - self.last_altitude_logged) >= 1000:
             print(f"📡 [{self.reg}] Quota {alt_m}m | GS: {speed_kt} kt | V/S: {int(v_rate_fpm)} ft/min")
             self.last_altitude_logged = alt_m
 
-        # 1. Inizio RUN-IN
+        # 1. INGRESSO IN RUN-IN
         if self.state == "IDLE":
-            is_level = -800 < v_rate_fpm < 600
+            is_level_or_slow_drift = -1000 < v_rate_fpm < 500
             is_straight = turn_rate < 3.5
-            is_drop_speed = 45 <= speed_kt <= 88
+            is_drop_speed = 45 <= speed_kt <= 95
 
-            if alt_m >= 2800 and is_level and is_straight and is_drop_speed:
+            if alt_m >= 2800 and is_level_or_slow_drift and is_straight and is_drop_speed:
                 print(f"🚀 [{self.reg}] INIZIO RUN-IN a {alt_m}m! (Prua: {track}°, GS: {speed_kt}kt)")
                 self.state = "RUN_IN"
                 self.max_alt_m = alt_m
                 self.buffer = [point]
 
-        # 2. Registrazione RUN-IN
+        # 2. REGISTRAZIONE RUN-IN
         elif self.state == "RUN_IN":
             if alt_m > self.max_alt_m:
                 self.max_alt_m = alt_m
 
-            # Reset se era solo una virata intermedia e l'aereo continua a salire
-            if alt_m > (self.buffer[0]["alt_m"] + 150):
+            # Reset se era solo una virata intermedia durante la salita
+            if alt_m > (self.buffer[0]["alt_m"] + 180):
                 print(f"🔄 [{self.reg}] Salita continua ({alt_m}m): ripristino monitoraggio.")
                 self.reset()
                 self.last_point = point
                 return
 
-            # Rilevamento picchiata
+            # VERA PICCHIATA:
+            # - Picchiata marcata: <= -2500 ft/min
+            # - Picchiata con virata/accelerazione motore: <= -1800 ft/min con GS >= 95kt o virata rapida
+            # - Perdita di oltre 350m di dislivello rispetto al picco massimo del passaggio
+            # - Quota scesa sotto i 2600m
             is_dive = (
-                (alt_m < (self.max_alt_m - 140)) or
-                (v_rate_fpm <= -3000) or
-                (v_rate_fpm <= -1800 and speed_kt >= 90) or
+                (v_rate_fpm <= -2500) or
+                (v_rate_fpm <= -1800 and (speed_kt >= 95 or turn_rate > 4.0)) or
+                (alt_m < (self.max_alt_m - 350)) or
                 (alt_m < 2600)
             )
 
@@ -150,16 +154,16 @@ class RunTracker:
                 self.reset()
             else:
                 self.buffer.append(point)
-                # Timeout di sicurezza: se dopo 150s è ancora in quota, salva il lancio
-                if (now - self.buffer[0]["time"]) > 150:
-                    print(f"⏱️ [{self.reg}] Chiusura run-in per timeout durata (150s).")
+                # Timeout di sicurezza: se dopo 180s non ha ancora picchiato, salva il passaggio
+                if (now - self.buffer[0]["time"]) > 180:
+                    print(f"⏱️ [{self.reg}] Chiusura run-in per timeout durata (180s).")
                     self.finalize_run()
                     self.reset()
 
         self.last_point = point
 
     def check_signal_timeout(self):
-        """Se l'aereo sparisce dal radar mentre picchiava, finalizza il lancio senza perdere i dati."""
+        """Salva il lancio se l'aereo sparisce dal radar mentre scendeva."""
         if self.state == "RUN_IN" and self.last_seen > 0:
             if (time.time() - self.last_seen) > 25:
                 print(f"🎯 [{self.reg}] Segnale radar perso in discesa: finalizzazione lancio in corso...")
@@ -167,17 +171,21 @@ class RunTracker:
                 self.reset()
 
     def finalize_run(self):
-        valid = [p for p in self.buffer if p["alt_m"] >= (self.max_alt_m - 90)]
-        if len(valid) < 4:
+        # Mantiene tutti i punti del volo livellato escludendo solo l'istante della picchiata
+        run_pts = [p for p in self.buffer if p["v_rate"] > -2000]
+        if len(run_pts) < 4:
+            run_pts = self.buffer
+
+        if len(run_pts) < 4:
             return
 
-        duration = int(valid[-1]["time"] - valid[0]["time"])
-        if duration < 12:
+        duration = int(run_pts[-1]["time"] - run_pts[0]["time"])
+        if duration < 15:
             return
 
-        avg_speed = round(sum(p["speed_kt"] for p in valid) / len(valid), 1)
-        avg_track = circular_mean_heading([p["track"] for p in valid])
-        exit_alt = valid[0]["alt_m"]
+        avg_speed = round(sum(p["speed_kt"] for p in run_pts) / len(run_pts), 1)
+        avg_track = circular_mean_heading([p["track"] for p in run_pts])
+        exit_alt = run_pts[0]["alt_m"]
 
         speed_mps = avg_speed * 0.514444
         sep_300m = round(300.0 / speed_mps, 1) if speed_mps > 0 else 0
@@ -206,13 +214,13 @@ class RunTracker:
                 "separation_sec": sep_300m,
                 "duration_sec": duration
             },
-            "points": [{"lat": p["lat"], "lon": p["lon"]} for p in valid]
+            "points": [{"lat": p["lat"], "lon": p["lon"]} for p in run_pts]
         }
 
         with open(file_path, "w") as f:
             json.dump(run_data, f, indent=2)
 
-        print(f"💾 [{self.reg}] Lancio #{run_num} salvato! (Asse: {avg_track}°, GS: {avg_speed}kt, Quota: {exit_alt}m, Sep: {sep_300m}s)")
+        print(f"💾 [{self.reg}] Lancio #{run_num} salvato! (Durata: {duration}s, Asse: {avg_track}°, GS: {avg_speed}kt, Quota: {exit_alt}m, Sep: {sep_300m}s)")
         update_master_index(self.reg, file_name, date_str, time_str, duration, avg_track, avg_speed)
         clean_old_runs()
         push_to_github(f"Nuovo lancio {self.reg} #{run_num} - {date_str}")
@@ -246,7 +254,7 @@ def update_master_index(reg, rel_file, date_str, time_str, duration, heading, sp
         json.dump(data, f, indent=2)
 
 def clean_old_runs():
-    cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30)
+    cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=90)
     index_path = os.path.join(DATA_DIR, "index.json")
     with open(index_path, "r") as f:
         data = json.load(f)

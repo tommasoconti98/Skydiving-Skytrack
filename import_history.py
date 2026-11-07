@@ -3,6 +3,7 @@ import csv
 import json
 import datetime
 import subprocess
+import math
 from collections import defaultdict
 
 REPO_DIR = os.path.expanduser("~/Skydiving-Skytrack")
@@ -17,6 +18,11 @@ def load_fleet():
         return {}
     with open(CONFIG_PATH, "r") as f:
         return {ac["reg"]: ac for ac in json.load(f)}
+
+def circular_mean_heading(angles_deg):
+    x = sum(math.cos(math.radians(a)) for a in angles_deg)
+    y = sum(math.sin(math.radians(a)) for a in angles_deg)
+    return round(math.degrees(math.atan2(y, x)) % 360)
 
 def parse_fr24_csv(filepath):
     points = []
@@ -51,8 +57,7 @@ def parse_fr24_csv(filepath):
     return points
 
 def extract_jump_runs_by_decollo(points):
-    """Isola i run-in cronologici e li raggruppa per decollo/ciclo di salita."""
-    if len(points) < 10:
+    if len(points) < 15:
         return []
 
     # 1. Deduplica e ordina per timestamp
@@ -63,61 +68,77 @@ def extract_jump_runs_by_decollo(points):
             dedup.append(p)
     points = dedup
 
-    # 2. Calcolo variometro (ft/min)
-    for i in range(1, len(points)):
-        dt = points[i]["time"] - points[i - 1]["time"]
-        points[i]["v_rate_fpm"] = ((points[i]["alt_ft"] - points[i - 1]["alt_ft"]) / dt * 60.0) if dt > 0 else 0.0
-    points[0]["v_rate_fpm"] = 0.0
-
-    # 3. Rilevamento picchiate post-lancio (< -1500 ft/min)
-    descents = [i for i, p in enumerate(points) if p["v_rate_fpm"] < -1500]
-    if not descents:
+    n = len(points)
+    if n < 15:
         return []
 
-    dive_events = []
-    curr_event = [descents[0]]
-    for i in range(1, len(descents)):
-        if descents[i] - descents[i - 1] <= 3:
-            curr_event.append(descents[i])
+    # 2. Calcolo variometro su finestra mobile di 5 campioni (10-12s)
+    window = 5
+    for i in range(n):
+        j = max(0, i - window)
+        dt = points[i]["time"] - points[j]["time"]
+        if dt > 0:
+            points[i]["v_rate_smooth"] = ((points[i]["alt_ft"] - points[j]["alt_ft"]) / dt) * 60.0
         else:
-            dive_events.append(curr_event)
-            curr_event = [descents[i]]
-    dive_events.append(curr_event)
+            points[i]["v_rate_smooth"] = 0.0
 
-    all_runs = []
-    for event in dive_events:
-        dive_start = event[0]
+    # 3. Individua l'inizio delle vere picchiate (discesa ripida sostenuta <= -2000 fpm)
+    dives = []
+    for i, p in enumerate(points):
+        if p["v_rate_smooth"] <= -2000:
+            if not dives or (p["time"] - points[dives[-1]]["time"] > 600):
+                dives.append(i)
+
+    # 4. Per ogni picchiata, raccoglie l'intera passata di lancio (fino a 3 minuti prima)
+    runs = []
+    for d_idx in dives:
+        dive_time = points[d_idx]["time"]
+        candidates = [p for p in points if dive_time - 180 <= p["time"] <= dive_time]
+        if not candidates:
+            continue
+        max_alt = max(p["alt_m"] for p in candidates)
+
         run_seg = []
-        for i in range(dive_start - 1, max(-1, dive_start - 35), -1):
-            p = points[i]
-            if p["alt_m"] >= 2800 and abs(p["v_rate_fpm"]) < 1000 and 50 <= p["speed_kt"] <= 120:
-                run_seg.insert(0, p)
+        for p in reversed(candidates):
+            # Parametri di run-in: quota lancio >= 2800m, dislivello massimo tollerato 350m, velocità 30-105 kt
+            if p["alt_m"] >= 2800 and (max_alt - p["alt_m"] <= 350) and (30 <= p["speed_kt"] <= 105):
+                if p.get("v_rate_smooth", 0) <= 800:
+                    run_seg.insert(0, p)
+                else:
+                    if len(run_seg) >= 5:
+                        break
             else:
-                if len(run_seg) > 0:
+                if len(run_seg) >= 5:
                     break
-        if len(run_seg) >= 4:
-            all_runs.append(run_seg)
 
-    # 4. Rimuove sovrapposizioni
+        if len(run_seg) >= 5:
+            dur = run_seg[-1]["time"] - run_seg[0]["time"]
+            if dur >= 20:
+                runs.append(run_seg)
+
+    # 5. Rimuove sovrapposizioni temporali
     unique_runs = []
-    for r in all_runs:
-        if not unique_runs or r[0]["time"] > unique_runs[-1][-1]["time"] + 30:
+    for r in runs:
+        if not unique_runs:
             unique_runs.append(r)
-
-    # 5. Raggruppa per stacco temporale tra decolli (> 15 minuti di intervallo)
-    decolli = []
-    curr_decollo = []
-    for r in unique_runs:
-        if not curr_decollo:
-            curr_decollo.append(r)
         else:
-            if r[0]["time"] - curr_decollo[-1][-1]["time"] > 900:
-                decolli.append(curr_decollo)
-                curr_decollo = [r]
+            if r[0]["time"] > unique_runs[-1][-1]["time"] + 30:
+                unique_runs.append(r)
+
+    # 6. Raggruppa per ciclo di decollo (> 15 minuti di stacco)
+    decolli = []
+    curr = []
+    for r in unique_runs:
+        if not curr:
+            curr.append(r)
+        else:
+            if r[0]["time"] - curr[-1][-1]["time"] > 900:
+                decolli.append(curr)
+                curr = [r]
             else:
-                curr_decollo.append(r)
-    if curr_decollo:
-        decolli.append(curr_decollo)
+                curr.append(r)
+    if curr:
+        decolli.append(curr)
 
     return decolli
 
@@ -134,7 +155,6 @@ def process_all_imports():
 
     print(f"📂 Trovati {len(csv_files)} file CSV. Inizio aggregazione...")
 
-    # Raggruppa tutti i punti per (aereo, data_utc)
     points_by_ac_date = defaultdict(list)
 
     for fname in csv_files:
@@ -160,10 +180,9 @@ def process_all_imports():
 
     total_runs_imported = 0
 
-    # Elabora giorno per giorno in ordine cronologico crescente
     for (reg, d_str), raw_points in sorted(points_by_ac_date.items()):
         decolli = extract_jump_runs_by_decollo(raw_points)
-        print(f"\n🗓️  {reg} - Data {d_str}: estratti {len(decolli)} decolli totali.")
+        print(f"\n🗓️  {reg} - Data {d_str}: estratti {len(decolli)} decolli completi.")
 
         ac_dir = os.path.join(RUNS_DIR, reg)
         os.makedirs(ac_dir, exist_ok=True)
@@ -172,7 +191,7 @@ def process_all_imports():
             for r_idx, run_segment in enumerate(runs_in_dec, 1):
                 duration = int(run_segment[-1]["time"] - run_segment[0]["time"])
                 avg_speed = round(sum(p["speed_kt"] for p in run_segment) / len(run_segment), 1)
-                avg_track = int(sum(p["track"] for p in run_segment) / len(run_segment))
+                avg_track = circular_mean_heading([p["track"] for p in run_segment])
                 exit_alt = run_segment[0]["alt_m"]
 
                 speed_mps = avg_speed * 0.514444
@@ -219,7 +238,8 @@ def process_all_imports():
                         break
 
                 total_runs_imported += 1
-                print(f"   ▶ {title} [{time_str} UTC] Quota: {exit_alt}m | HDG: {avg_track}° | GS: {avg_speed}kt | Sep: {sep_300m}s")
+                dur_m, dur_s = divmod(duration, 60)
+                print(f"   ▶ {title} [{time_str} UTC] Durata: {dur_m}m {dur_s:02d}s ({duration}s) | Quota: {exit_alt}m | Asse: {avg_track}° | GS: {avg_speed}kt | Sep: {sep_300m}s")
 
     if total_runs_imported > 0:
         master_index["last_updated"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -228,9 +248,9 @@ def process_all_imports():
 
         print("\n☁️  Sincronizzazione su GitHub in corso...")
         subprocess.run(["git", "-C", REPO_DIR, "add", "."], check=True)
-        subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", f"Importati {total_runs_imported} lanci storici"], check=True)
+        subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", f"Aggiornamento storico: {total_runs_imported} lanci completi importati"], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-        print("✅ Storico aggiornato e pubblicato su GitHub Pages!")
+        print("✅ Storico aggiornato con tracce complete su GitHub Pages!")
     else:
         print("Nessun nuovo lancio importato.")
 
