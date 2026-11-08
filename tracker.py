@@ -241,7 +241,7 @@ def update_master_index(reg, rel_file, date_str, time_str, duration, heading, sp
                 "file": f"{reg}/{rel_file}",
                 "date": date_str,
                 "time": time_str,
-                "title": f"Decollo #{len(ac['runs']) + 1}",
+                "title": f"Decollo #{len([r for r in ac.get('runs', []) if r.get('date') == date_str]) + 1}",
                 "duration_sec": duration,
                 "heading_deg": heading,
                 "speed_kt": speed
