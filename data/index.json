@@ -524,6 +524,15 @@
       "model": "Pilatus PC-6",
       "runs": [
         {
+          "file": "OK-AFF/2026-11-08_run_07.json",
+          "date": "2026-11-08",
+          "time": "14:40",
+          "title": "Decollo #7",
+          "duration_sec": 70,
+          "heading_deg": 188,
+          "speed_kt": 63.2
+        },
+        {
           "file": "OK-AFF/2026-11-08_run_06.json",
           "date": "2026-11-08",
           "time": "14:15",
@@ -1388,5 +1397,5 @@
       ]
     }
   ],
-  "last_updated": "2026-11-08T14:32:38.080619+00:00"
+  "last_updated": "2026-11-08T14:40:19.202575+00:00"
 }
