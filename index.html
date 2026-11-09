@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <!-- Icona Schermata Home iOS & Android -->
+  <!-- Icona Schermata Home iOS & Android -->
   <link rel="apple-touch-icon" href="skytrack-logo.jpg" />
   <link rel="icon" type="image/jpeg" href="skytrack-logo.jpg" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -22,7 +22,7 @@
       overflow: hidden;
     }
 
-    /* VISTA 1: LISTA FLOTTA (HOME) */
+    /* VISTA 1: LISTA DROPZONE (HOME) */
     #fleet-screen {
       width: 100%; height: 100%; display: flex; flex-direction: column;
       background: #0a0a0a; overflow-y: auto;
@@ -45,11 +45,15 @@
       background: #1c1c1c; border-color: #ffcc00; transform: translateY(-2px);
     }
     .card-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-    .card-reg { font-size: 20px; font-weight: 900; color: #00e5ff; letter-spacing: 0.5px; }
-    .card-dz { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* TITOLO = NOME DROPZONE */
+    .card-dz-title { font-size: 20px; font-weight: 900; color: #00e5ff; letter-spacing: 0.5px; }
+    /* SOTTOTITOLO = MARCHE VELIVOLO ATTIVO */
+    .card-reg-sub { font-size: 14px; font-weight: 700; color: #ffffff; margin-top: 2px; }
+    /* TERZA RIGA = MODELLO */
     .card-model { font-size: 12px; color: #777; }
 
-    /* FOTO DESTRA FLOTTA */
+    /* FOTO DESTRA */
     .card-right {
       display: flex; align-items: center; gap: 12px; margin-left: 12px; flex-shrink: 0;
     }
@@ -80,7 +84,7 @@
     }
     .footer-note { font-size: 11px; color: #71717a; }
 
-    /* VISTA 2: DETTAGLIO AEREO (MAPPA & HUD) */
+    /* VISTA 2: DETTAGLIO DROPZONE (MAPPA & HUD) */
     #detail-screen {
       width: 100%; height: 100%; display: none; flex-direction: column;
       position: relative;
@@ -176,18 +180,18 @@
 </head>
 <body>
 
-  <!-- SCHERMATA 1: SELEZIONE FLOTTA -->
+  <!-- SCHERMATA 1: LISTA DROPZONE -->
   <div id="fleet-screen">
     <div class="fleet-header">
       <div class="fleet-title">✈ SKYTRACK DROP-LOG</div>
-      <div class="fleet-subtitle">Seleziona un velivolo per vedere la telemetria di lancio</div>
+      <div class="fleet-subtitle">Seleziona una dropzone per visualizzare i lanci</div>
     </div>
     
     <div class="fleet-grid" id="fleet-grid">
-      <div style="padding: 20px; color: #666;">Caricamento flotta in corso...</div>
+      <div style="padding: 20px; color: #666;">Caricamento dropzone in corso...</div>
     </div>
 
-    <!-- CREDITS -->
+    <!-- CREDITS IN FONDO -->
     <div class="fleet-footer">
       <div class="footer-credit">Sviluppato da <strong>Tommaso Conti</strong></div>
       <a class="footer-email" href="mailto:tommasoconti98@gmail.com?subject=SkyTrack%20-%20Richiesta%20di%20aggiunta%20aereo%20%2F%20dropzone&body=Ciao%20Tommaso%2C%0A%0Ami%20piacerebbe%20aggiungere%20questo%20aereo%2Fdropzone%20su%20SkyTrack%3A%0A%0A-%20Marche%20dell%27aereo%3A%20%0A-%20Nome%20della%20dropzone%3A%20%0A%0A%2AEntrambi%20i%20campi%20sono%20essenziali%20per%20l%27aggiunta%20sul%20portale.%0A%0AGrazie%21">
@@ -197,10 +201,10 @@
     </div>
   </div>
 
-  <!-- SCHERMATA 2: DETTAGLIO AEREO -->
+  <!-- SCHERMATA 2: DETTAGLIO DROPZONE -->
   <div id="detail-screen">
     <div id="top-bar">
-      <button class="btn-back" onclick="showFleetScreen()">← FLOTTA</button>
+      <button class="btn-back" onclick="showFleetScreen()">← DROPZONE</button>
       <div class="active-ac-title" id="active-ac-title">--</div>
       <div style="width: 70px;"></div>
     </div>
@@ -246,69 +250,29 @@
   </div>
 
   <script>
-    let fleetConfig = [];
+    let dropzonesConfig = [];
+    let fleetConfig = {};
     let masterIndex = null;
-    let selectedAircraft = null;
+    let selectedDz = null;
     let map = null;
     let currentTrajectoryLine = null;
     let markersLayer = null;
 
-    // Rileva automaticamente il fuso orario dalle coordinate geografiche (lat, lon)
     function getTimezoneFromCoords(lat, lon) {
       if (lat == null || lon == null) return 'Europe/Rome';
-
-      // Isole Canarie
       if (lat >= 27 && lat <= 30 && lon >= -19 && lon <= -13) return 'Atlantic/Canary';
-      // Portogallo Continentale
       if (lat >= 36.5 && lat <= 42.5 && lon >= -10.0 && lon <= -6.0) return 'Europe/Lisbon';
-      // Regno Unito & Irlanda
       if (lat >= 49.5 && lat <= 61.0 && lon >= -11.0 && lon <= 2.0) return 'Europe/London';
-      // Islanda
-      if (lat >= 63 && lat <= 67 && lon >= -25 && lon <= -13) return 'Atlantic/Reykjavik';
-
-      // Europa Orientale (Grecia, Cipro, Romania, Bulgaria, Finlandia, Paesi Baltici)
-      if (lat >= 34 && lat <= 42 && lon >= 19.5 && lon <= 29.0) return 'Europe/Athens';
-      if (lat >= 34 && lat <= 36 && lon >= 32.0 && lon <= 35.0) return 'Asia/Nicosia';
-      if (lat >= 41 && lat <= 48.5 && lon >= 22.5 && lon <= 30.0) return 'Europe/Bucharest';
-      if (lat >= 53.5 && lat <= 71 && lon >= 20.5 && lon <= 32.0) return 'Europe/Helsinki';
-
-      // Europa Centrale (CET/CEST: Italia, Spagna, Francia, Germania, Svizzera, Austria, Rep. Ceca, Polonia, ecc.)
       if (lat >= 35 && lat <= 72 && lon >= -10.0 && lon <= 25.0) return 'Europe/Rome';
-
-      // Emirati Arabi (es. Skydive Dubai)
-      if (lat >= 22 && lat <= 27 && lon >= 51.0 && lon <= 57.0) return 'Asia/Dubai';
-
-      // Nord America (USA & Canada)
-      if (lat >= 24 && lat <= 60 && lon >= -130 && lon <= -60) {
-        if (lon < -114) return 'America/Los_Angeles'; // Fuso Pacifico
-        if (lon < -102) return 'America/Denver';      // Fuso Montagne
-        if (lon < -85)  return 'America/Chicago';     // Fuso Centrale
-        return 'America/New_York';                    // Fuso Orientale
-      }
-
-      // Australia
-      if (lat >= -45 && lat <= -10 && lon >= 110 && lon <= 155) {
-        if (lon < 129) return 'Australia/Perth';
-        if (lon < 138) return 'Australia/Adelaide';
-        return 'Australia/Sydney';
-      }
-
       return 'Europe/Rome';
     }
 
-    // Converte timestamp UTC nell'ora locale calcolata
     function formatLocalTime(dateStr, timeStr, tz) {
       try {
         const d = new Date(`${dateStr}T${timeStr}:00Z`);
         if (isNaN(d.getTime())) return timeStr;
-        return d.toLocaleTimeString('it-IT', {
-          timeZone: tz,
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      } catch (e) {
-        return timeStr;
-      }
+        return d.toLocaleTimeString('it-IT', { timeZone: tz, hour: '2-digit', minute: '2-digit' });
+      } catch (e) { return timeStr; }
     }
 
     function formatLocalDate(dateStr, timeStr, tz) {
@@ -316,14 +280,12 @@
         const d = new Date(`${dateStr}T${timeStr}:00Z`);
         if (isNaN(d.getTime())) return dateStr;
         return d.toLocaleDateString('sv-SE', { timeZone: tz });
-      } catch (e) {
-        return dateStr;
-      }
+      } catch (e) { return dateStr; }
     }
 
     function initMap() {
       if (!map) {
-        map = L.map('map', { zoomControl: false }).setView([40.4720, 14.9608], 14);
+        map = L.map('map', { zoomControl: false }).setView([37.0296, 15.2441], 13);
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
           maxZoom: 18, attribution: 'Esri Satellite'
         }).addTo(map);
@@ -333,39 +295,60 @@
 
     async function loadApp() {
       try {
-        const fleetRes = await fetch('aircraft.json?v=' + Date.now());
-        fleetConfig = await fleetRes.json();
+        const [dzRes, fleetRes, idxRes] = await Promise.all([
+          fetch('dropzones.json?v=' + Date.now()).then(r => r.json()).catch(() => []),
+          fetch('fleet.json?v=' + Date.now()).then(r => r.json()).catch(() => ({})),
+          fetch('data/index.json?v=' + Date.now()).then(r => r.json()).catch(() => null)
+        ]);
 
-        try {
-          const idxRes = await fetch('data/index.json?v=' + Date.now());
-          if (idxRes.ok) masterIndex = await idxRes.json();
-        } catch(e) {}
+        dropzonesConfig = dzRes;
+        fleetConfig = fleetRes;
+        masterIndex = idxRes;
 
-        renderFleetList();
+        renderDropzonesList();
       } catch (err) {
         document.getElementById('fleet-grid').innerHTML =
-          `<div style="color:#ff3366;padding:20px;">Errore caricamento aircraft.json: ${err.message}</div>`;
+          `<div style="color:#ff3366;padding:20px;">Errore caricamento dati: ${err.message}</div>`;
       }
     }
 
-    function renderFleetList() {
+    function renderDropzonesList() {
       const grid = document.getElementById('fleet-grid');
       grid.innerHTML = '';
 
-      fleetConfig.forEach(ac => {
+      dropzonesConfig.forEach(dz => {
+        // Recupera aereo attivo e modello da index.json o dropzones.json
+        let activeReg = dz.active_reg || '--';
+        let model = 'Pilatus PC-6';
+        let photo = '';
+
+        if (masterIndex && masterIndex.dropzones) {
+          const found = masterIndex.dropzones.find(d => d.id === dz.id);
+          if (found) {
+            activeReg = found.active_reg || activeReg;
+            model = found.model || model;
+            photo = found.photo || photo;
+          }
+        }
+
+        if (!photo && fleetConfig[activeReg]) {
+          photo = fleetConfig[activeReg].photo || '';
+          model = fleetConfig[activeReg].model || model;
+        }
+
         const card = document.createElement('div');
         card.className = 'fleet-card';
-        card.onclick = () => openAircraft(ac);
+        card.onclick = () => openDropzone(dz, activeReg, model);
         card.innerHTML = `
           <div class="card-left">
-            <div class="card-reg">${ac.reg}</div>
-            <div class="card-dz">${ac.name}</div>
-            <div class="card-model">${ac.model || 'Aereo da lancio'}</div>
+            <div class="card-dz-title">${dz.name}</div>
+            <div class="card-reg-sub">${activeReg}</div>
+            <div class="card-model">${model}</div>
           </div>
           <div class="card-right">
-            ${ac.photo ? `
+            ${photo ? `
               <div class="card-thumb">
-                <img src="${ac.photo}" alt="${ac.reg}" onerror="this.parentElement.style.display='none'">
+                <img src="${photo}" alt="${activeReg}" onerror="this.parentElement.style.display='none'">
               </div>
             ` : ''}
             <div class="card-arrow">›</div>
@@ -375,32 +358,33 @@
       });
     }
 
-    function openAircraft(ac) {
-      selectedAircraft = ac;
+    function openDropzone(dz, activeReg, model) {
+      selectedDz = dz;
       document.getElementById('fleet-screen').style.display = 'none';
       document.getElementById('detail-screen').style.display = 'flex';
-      document.getElementById('active-ac-title').innerText = `${ac.reg} - ${ac.name}`;
+      document.getElementById('active-ac-title').innerText = `${dz.name} - ${activeReg}`;
 
-      // Configura link Flightradar24
-      document.getElementById('fr24-btn').href = 'https://www.flightradar24.com/data/aircraft/' + ac.reg.toLowerCase();
+      // Configura il cerchietto Flightradar24
+      const frBtn = document.getElementById('fr24-btn');
+      frBtn.href = activeReg !== '--' ? `https://www.flightradar24.com/data/aircraft/${activeReg.toLowerCase()}` : '#';
 
       initMap();
       map.invalidateSize();
 
       let runs = [];
-      if (masterIndex && masterIndex.aircrafts) {
-        const found = masterIndex.aircrafts.find(a => a.reg === ac.reg);
+      if (masterIndex && masterIndex.dropzones) {
+        const found = masterIndex.dropzones.find(d => d.id === dz.id);
         if (found && found.runs) runs = found.runs;
       }
 
-      renderRunsList(runs);
+      renderRunsList(runs, dz);
 
       if (runs.length > 0) {
         loadRun(runs[0].file);
       } else {
         clearHUD();
-        if (ac.center_lat && ac.center_lon) {
-          map.setView([ac.center_lat, ac.center_lon], 14);
+        if (dz.center_lat && dz.center_lon) {
+          map.setView([dz.center_lat, dz.center_lon], 13);
         }
       }
     }
@@ -411,18 +395,17 @@
       toggleHistory(false);
     }
 
-    function renderRunsList(runs) {
+    function renderRunsList(runs, dz) {
       const listEl = document.getElementById('runs-list');
       listEl.innerHTML = '';
-      document.getElementById('drawer-title').innerText = `Lanci Registrati - ${selectedAircraft.reg}`;
+      document.getElementById('drawer-title').innerText = `Lanci Registrati - ${dz.name}`;
 
       if (!runs || runs.length === 0) {
-        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Nessun lancio registrato negli ultimi 30 giorni per questo velivolo.</div>';
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Nessun lancio registrato negli ultimi 30 giorni in questa dropzone.</div>';
         return;
       }
 
-      // Fuso orario calcolato automaticamente da center_lat e center_lon
-      const tz = getTimezoneFromCoords(selectedAircraft.center_lat, selectedAircraft.center_lon);
+      const tz = getTimezoneFromCoords(dz.center_lat, dz.center_lon);
 
       runs.forEach(r => {
         const localTime = formatLocalTime(r.date, r.time, tz);
@@ -433,7 +416,7 @@
         item.onclick = () => { loadRun(r.file); toggleHistory(false); };
         item.innerHTML = `
           <div>
-            <div class="run-date">${localDate} - ${r.title}</div>
+            <div class="run-date">${localDate} - ${r.title} (${r.reg || dz.active_reg})</div>
             <div class="run-time">Ore: ${localTime} | Durata: ${r.duration_sec}s</div>
           </div>
           <div class="run-stats-tag">${r.heading_deg}° / ${r.speed_kt} kt</div>

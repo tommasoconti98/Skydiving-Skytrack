@@ -1,0 +1,37 @@
+[
+  {
+    "id": "salerno",
+    "name": "SkyDive Salerno",
+    "center_lat": 40.4720,
+    "center_lon": 14.9608,
+    "active_reg": "D-FGMG"
+  },
+  {
+    "id": "lucca",
+    "name": "SkyDive Lucca",
+    "center_lat": 43.8332,
+    "center_lon": 10.5800,
+    "active_reg": "D-FSKY"
+  },
+  {
+    "id": "nettuno",
+    "name": "CrazyFly Nettuno",
+    "center_lat": 41.4661,
+    "center_lon": 12.7457,
+    "active_reg": "S5-CMA"
+  },
+  {
+    "id": "orbetello",
+    "name": "SkyDive Costa D'Argento",
+    "center_lat": 42.4950,
+    "center_lon": 11.2388,
+    "active_reg": "OK-AFF"
+  },
+  {
+    "id": "sicilia",
+    "name": "SkyDive Sicilia",
+    "center_lat": 37.029638,
+    "center_lon": 15.244150,
+    "active_reg": "D-FSKY"
+  }
+]

@@ -9,7 +9,8 @@ import threading
 import telebot
 
 REPO_DIR = os.path.expanduser("~/Skydiving-Skytrack")
-AIRCRAFT_CONFIG = os.path.join(REPO_DIR, "aircraft.json")
+DROPZONES_FILE = os.path.join(REPO_DIR, "dropzones.json")
+FLEET_FILE = os.path.join(REPO_DIR, "fleet.json")
 DATA_DIR = os.path.join(REPO_DIR, "data")
 RUNS_DIR = os.path.join(DATA_DIR, "runs")
 INDEX_PATH = os.path.join(DATA_DIR, "index.json")
@@ -19,7 +20,7 @@ TELEGRAM_USERS_FILE = os.path.join(DATA_DIR, "telegram_users.json")
 BOT_TOKEN = "9201777349:AAGtvUAgMs9aiTzMUYgfmlXsEhAlmx1tt3M"
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# ================= FUNZIONI TELEGRAM ===============
+# ================= GESTIONE UTENTI TELEGRAM ========
 def load_telegram_users():
     if os.path.exists(TELEGRAM_USERS_FILE):
         try:
@@ -32,10 +33,10 @@ def save_telegram_users(users):
     with open(TELEGRAM_USERS_FILE, "w") as f:
         json.dump(users, f, indent=2)
 
-def broadcast_telegram(reg, message):
+def broadcast_telegram(target_key, message):
     users = load_telegram_users()
-    for chat_id, sub_reg in users.items():
-        if sub_reg == reg or sub_reg == "ALL":
+    for chat_id, sub in users.items():
+        if sub == target_key or sub == "ALL":
             try:
                 bot.send_message(chat_id, message, parse_mode="Markdown")
             except Exception as e:
@@ -43,71 +44,101 @@ def broadcast_telegram(reg, message):
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    bot.reply_to(message, "✈️ *Benvenuto su SkyTrack Bot!*\nUsa /lista per vedere gli aerei disponibili e iscriverti alle notifiche.", parse_mode="Markdown")
+    bot.reply_to(message, "✈️ *Benvenuto su SkyTrack Bot!*\nUsa /lista per scegliere quale Dropzone seguire.", parse_mode="Markdown")
 
 @bot.message_handler(commands=['stato'])
 def handle_stato(message):
-    bot.reply_to(message, "🟢 *Sistema Online*\nIl radar è attivo e sta monitorando le dropzone.", parse_mode="Markdown")
+    dzs = load_dropzones()
+    bot.reply_to(message, f"🟢 *Sistema Online*\nIl radar sta monitorando {len(dzs)} dropzone.", parse_mode="Markdown")
 
 @bot.message_handler(commands=['lista'])
 def handle_lista(message):
-    fleet = load_fleet_config()
-    msg = "📋 *Aerei disponibili:*\n\n"
-    for reg, info in fleet.items():
-        clean_cmd = reg.replace("-", "").upper()
-        msg += f"• *{reg}* ({info['name']})\n  👉 Premi: /{clean_cmd}\n\n"
-    msg += "Clicca sul comando dell'aereo che vuoi seguire per ricevere solo i suoi aggiornamenti."
+    dzs = load_dropzones()
+    msg = "📋 *Dropzone monitorate:*\n\n"
+    for dz in dzs:
+        clean_cmd = dz["id"].upper()
+        msg += f"• *{dz['name']}*\n  Velivolo attuale: `{dz.get('active_reg', '--')}`\n  👉 Segui: /{clean_cmd}\n\n"
+    msg += "Clicca sul comando della dropzone per ricevere le sue notifiche."
     bot.reply_to(message, msg, parse_mode="Markdown")
 
 @bot.message_handler(func=lambda msg: msg.text.startswith('/'))
 def handle_custom_command(message):
-    cmd = message.text[1:].upper()
-    fleet = load_fleet_config()
+    cmd = message.text[1:].upper().replace("-", "")
+    dzs = load_dropzones()
+    fleet = load_fleet()
     
-    # Mappa il comando (es. DFGMG) alla sigla reale (D-FGMG)
-    target_reg = None
+    # 1. Match per Dropzone ID (es. /SICILIA, /SALERNO, /LUCCA)
+    for dz in dzs:
+        if dz["id"].upper() == cmd:
+            users = load_telegram_users()
+            users[str(message.chat.id)] = dz["id"]
+            save_telegram_users(users)
+            bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai le notifiche per *{dz['name']}* (Velivolo: `{dz.get('active_reg', '--')}`).", parse_mode="Markdown")
+            return
+
+    # 2. Match per Marche Aereo (es. /DFSKY, /DFGMG)
     for reg in fleet.keys():
         if reg.replace("-", "").upper() == cmd:
-            target_reg = reg
-            break
-            
-    if target_reg:
-        users = load_telegram_users()
-        users[str(message.chat.id)] = target_reg
-        save_telegram_users(users)
-        bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai solo le allerte per *{target_reg}* ({fleet[target_reg]['name']}).", parse_mode="Markdown")
-    elif cmd not in ["START", "STATO", "LISTA"]:
-        bot.reply_to(message, "Comando non riconosciuto. Usa /lista per vedere i comandi validi.")
+            users = load_telegram_users()
+            users[str(message.chat.id)] = reg
+            save_telegram_users(users)
+            bot.reply_to(message, f"✅ Iscrizione confermata per il velivolo *{reg}*.", parse_mode="Markdown")
+            return
+
+    if cmd not in ["START", "STATO", "LISTA"]:
+        bot.reply_to(message, "Comando non riconosciuto. Usa /lista per vedere l'elenco.")
 
 def run_bot():
     print("🤖 Bot Telegram avviato in background.")
-    bot.infinity_polling()
+    bot.infinity_polling(timeout=60, long_polling_timeout=30)
 
-# ================= CORE SKYTRACK =================
+# ================= CORE SKYTRACK ===================
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "Referer": "https://www.flightradar24.com/",
     "Origin": "https://www.flightradar24.com"
 }
 
-def load_fleet_config():
-    if not os.path.exists(AIRCRAFT_CONFIG): return {}
-    with open(AIRCRAFT_CONFIG, "r") as f:
-        return {ac["reg"]: ac for ac in json.load(f)}
+def load_dropzones():
+    if not os.path.exists(DROPZONES_FILE): return []
+    with open(DROPZONES_FILE, "r") as f: return json.load(f)
 
-def ensure_master_index(fleet_dict):
+def save_dropzones(dzs):
+    with open(DROPZONES_FILE, "w") as f: json.dump(dzs, f, indent=2)
+
+def load_fleet():
+    if not os.path.exists(FLEET_FILE): return {}
+    with open(FLEET_FILE, "r") as f: return json.load(f)
+
+def ensure_master_index(dropzones, fleet):
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(RUNS_DIR, exist_ok=True)
-    if not os.path.exists(INDEX_PATH):
-        data = {"aircrafts": [], "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat()}
-    else:
-        with open(INDEX_PATH, "r") as f:
-            data = json.load(f)
+    
+    data = {"dropzones": [], "last_updated": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    if os.path.exists(INDEX_PATH):
+        try:
+            with open(INDEX_PATH, "r") as f:
+                old = json.load(f)
+                if "dropzones" in old:
+                    data = old
+        except: pass
 
-    existing_regs = {ac["reg"] for ac in data.get("aircrafts", [])}
-    for reg, info in fleet_dict.items():
-        if reg not in existing_regs:
-            data["aircrafts"].append({"reg": reg, "name": f"{reg} - {info['name']}", "runs": []})
+    existing_ids = {d["id"] for d in data.get("dropzones", [])}
+    for dz in dropzones:
+        if dz["id"] not in existing_ids:
+            reg = dz.get("active_reg", "")
+            model = fleet.get(reg, {}).get("model", "Aereo da lancio")
+            photo = fleet.get(reg, {}).get("photo", "")
+            data["dropzones"].append({
+                "id": dz["id"],
+                "name": dz["name"],
+                "active_reg": reg,
+                "model": model,
+                "photo": photo,
+                "center_lat": dz["center_lat"],
+                "center_lon": dz["center_lon"],
+                "runs": []
+            })
     
     with open(INDEX_PATH, "w") as f:
         json.dump(data, f, indent=2)
@@ -117,22 +148,38 @@ def circular_mean_heading(angles_deg):
     y = sum(math.sin(math.radians(a)) for a in angles_deg)
     return round(math.degrees(math.atan2(y, x)) % 360)
 
-class RunTracker:
-    def __init__(self, reg, info):
-        self.reg = reg
-        self.info = info
+class DropzoneTracker:
+    def __init__(self, dz, fleet):
+        self.dz_id = dz["id"]
+        self.dz_name = dz["name"]
+        self.center_lat = dz["center_lat"]
+        self.center_lon = dz["center_lon"]
+        self.active_reg = dz.get("active_reg", "")
+        self.fleet = fleet
+        
         self.state = "IDLE"
         self.buffer = []
         self.last_seen = 0
         self.last_point = None
         self.max_alt_m = 0
-        
         self.is_flying = False
 
-    def process_point(self, lat, lon, track, alt_ft, speed_kt, feed_vrt):
+    def update_active_aircraft(self, reg):
+        if self.active_reg != reg:
+            self.active_reg = reg
+            # Aggiorna dropzones.json
+            dzs = load_dropzones()
+            for d in dzs:
+                if d["id"] == self.dz_id:
+                    d["active_reg"] = reg
+                    break
+            save_dropzones(dzs)
+
+    def process_point(self, reg, lat, lon, track, alt_ft, speed_kt, feed_vrt):
         now = time.time()
         alt_m = int(alt_ft * 0.3048)
         self.last_seen = now
+        self.update_active_aircraft(reg)
 
         calc_v_rate = feed_vrt
         turn_rate = 0.0
@@ -147,11 +194,13 @@ class RunTracker:
         v_rate_fpm = calc_v_rate
         point = {"time": now, "lat": lat, "lon": lon, "track": track, "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm}
 
-        # LOGICA DECOLLO TELEGRAM
-        # Se supera i 350m e sta salendo ad almeno 400 ft/min
+        # ALERT TELEGRAM: Decollo
         if alt_m > 350 and v_rate_fpm > 400 and not self.is_flying:
             self.is_flying = True
-            broadcast_telegram(self.reg, f"🛫 *Aereo in volo!*\n{self.reg} sta salendo a {alt_m}m.")
+            model = self.fleet.get(self.active_reg, {}).get("model", "Aereo")
+            msg = f"🛫 *Aereo in volo a {self.dz_name}!*\n*{self.active_reg}* ({model}) sta salendo a {alt_m}m."
+            broadcast_telegram(self.dz_id, msg)
+            broadcast_telegram(self.active_reg, msg)
 
         if self.state == "IDLE":
             if alt_m >= 2800 and -1000 < v_rate_fpm < 500 and turn_rate < 3.5 and 45 <= speed_kt <= 95:
@@ -181,15 +230,16 @@ class RunTracker:
 
     def check_signal_timeout(self):
         now = time.time()
-        # Salvataggio run-in se sparisce
         if self.state == "RUN_IN" and self.last_seen > 0 and (now - self.last_seen) > 25:
             self.finalize_run()
             self.reset()
         
-        # Timeout 40 minuti (2400 sec): Aereo atterrato o fine operazioni
+        # Timeout 40 minuti: aereo a terra
         if self.is_flying and self.last_seen > 0 and (now - self.last_seen) > 2400:
             self.is_flying = False
-            broadcast_telegram(self.reg, f"💤 *Tracciamento in pausa*\nSegnale di {self.reg} assente da 40 minuti (Atterrato o transponder spento).")
+            msg = f"💤 *Tracciamento in pausa a {self.dz_name}*\nNessun segnale da {self.active_reg} da 40 minuti (Atterrato)."
+            broadcast_telegram(self.dz_id, msg)
+            broadcast_telegram(self.active_reg, msg)
 
     def finalize_run(self):
         run_pts = [p for p in self.buffer if p["v_rate"] > -2000]
@@ -208,42 +258,54 @@ class RunTracker:
         d_str, t_str = now_dt.strftime("%Y-%m-%d"), now_dt.strftime("%H:%M")
 
         with open(INDEX_PATH, "r") as f: data = json.load(f)
-        ac_entry = next((a for a in data["aircrafts"] if a["reg"] == self.reg), None)
-        run_num = len([r for r in ac_entry.get("runs", []) if r.get("date") == d_str]) + 1 if ac_entry else 1
+        dz_entry = next((d for d in data.get("dropzones", []) if d["id"] == self.dz_id), None)
+        run_num = len([r for r in dz_entry.get("runs", []) if r.get("date") == d_str]) + 1 if dz_entry else 1
 
         # TELEGRAM: Riassunto Lancio
-        msg = f"🪂 *Lancio Completato!*\n✈️ {self.reg} - Decollo #{run_num}\n\n"
+        model = self.fleet.get(self.active_reg, {}).get("model", "")
+        msg = f"🪂 *Lancio Completato!*\n📍 *{self.dz_name}* — Decollo #{run_num}\n"
+        msg += f"✈️ Velivolo: *{self.active_reg}* ({model})\n\n"
         msg += f"📏 Quota: *{exit_alt}m*\n"
         msg += f"🧭 Asse: *{avg_track}°*\n"
         msg += f"💨 Ground Speed: *{avg_speed} kt*\n"
         msg += f"⏱ Separazione 300m: *{sep_300m} s*"
-        broadcast_telegram(self.reg, msg)
+        broadcast_telegram(self.dz_id, msg)
+        broadcast_telegram(self.active_reg, msg)
 
-        # Salvataggio File 
-        ac_dir = os.path.join(RUNS_DIR, self.reg)
-        os.makedirs(ac_dir, exist_ok=True)
+        # Salvataggio file del lancio
+        dz_dir = os.path.join(RUNS_DIR, self.dz_id)
+        os.makedirs(dz_dir, exist_ok=True)
         f_name = f"{d_str}_run_{run_num:02d}.json"
         
         run_data = {
-            "reg": self.reg, "dropzone": self.info["name"], "date": d_str, "time": t_str,
+            "dropzone_id": self.dz_id, "dropzone": self.dz_name,
+            "reg": self.active_reg, "model": model,
+            "date": d_str, "time": t_str,
             "stats": {"altitude_m": exit_alt, "heading_deg": avg_track, "ground_speed_kt": avg_speed, "separation_sec": sep_300m, "duration_sec": duration},
             "points": [{"lat": p["lat"], "lon": p["lon"]} for p in run_pts]
         }
-        with open(os.path.join(ac_dir, f_name), "w") as f: json.dump(run_data, f)
+        with open(os.path.join(dz_dir, f_name), "w") as f: json.dump(run_data, f)
         
-        update_master_index(self.reg, f_name, d_str, t_str, duration, avg_track, avg_speed, run_num)
-        push_to_github(f"Nuovo lancio {self.reg} #{run_num}")
+        update_master_index(self.dz_id, self.active_reg, model, self.fleet.get(self.active_reg, {}).get("photo", ""), f_name, d_str, t_str, duration, avg_track, avg_speed, run_num)
+        push_to_github(f"Lancio {self.dz_name} #{run_num} ({self.active_reg})")
 
     def reset(self):
         self.state = "IDLE"
         self.buffer = []
         self.max_alt_m = 0
 
-def update_master_index(reg, rel_file, d_str, t_str, duration, heading, speed, run_num):
+def update_master_index(dz_id, reg, model, photo, rel_file, d_str, t_str, duration, heading, speed, run_num):
     with open(INDEX_PATH, "r") as f: data = json.load(f)
-    for ac in data["aircrafts"]:
-        if ac["reg"] == reg:
-            ac["runs"].insert(0, {"file": f"{reg}/{rel_file}", "date": d_str, "time": t_str, "title": f"Decollo #{run_num}", "duration_sec": duration, "heading_deg": heading, "speed_kt": speed})
+    for dz in data.get("dropzones", []):
+        if dz["id"] == dz_id:
+            dz["active_reg"] = reg
+            dz["model"] = model
+            if photo: dz["photo"] = photo
+            dz["runs"].insert(0, {
+                "file": f"{dz_id}/{rel_file}", "reg": reg, "date": d_str, "time": t_str,
+                "title": f"Decollo #{run_num}", "duration_sec": duration,
+                "heading_deg": heading, "speed_kt": speed
+            })
             break
     data["last_updated"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
     with open(INDEX_PATH, "w") as f: json.dump(data, f, indent=2)
@@ -258,33 +320,42 @@ def push_to_github(msg):
 def main():
     threading.Thread(target=run_bot, daemon=True).start()
     
-    fleet = load_fleet_config()
-    ensure_master_index(fleet)
-    trackers = {reg: RunTracker(reg, info) for reg, info in fleet.items()}
+    dropzones = load_dropzones()
+    fleet = load_fleet()
+    ensure_master_index(dropzones, fleet)
     
+    trackers = {dz["id"]: DropzoneTracker(dz, fleet) for dz in dropzones}
     daily_summary_sent = False
+    last_heartbeat = time.time()
+    
+    print(f"🟢 SkyTrack Monitor avviato! Dropzone monitorate: {[d['name'] for d in dropzones]}")
 
     while True:
         now_time = time.time()
-        dt_now = datetime.datetime.now() # Ora locale Raspberry (CET/CEST)
+        dt_now = datetime.datetime.now()
         
-        # Riassunto Giornaliero: Fisso alle 20:30 locali
+        # Heartbeat ogni 30 minuti
+        if (now_time - last_heartbeat) >= 1800:
+            print(f"💓 [HEARTBEAT] Monitor attivo su {len(trackers)} dropzone | Bot Telegram online.")
+            last_heartbeat = now_time
+
+        # Riassunto Giornata alle 20:30 locali
         if dt_now.hour == 20 and dt_now.minute == 30:
             if not daily_summary_sent:
                 today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
                 with open(INDEX_PATH, "r") as f: data = json.load(f)
-                
-                for ac in data["aircrafts"]:
-                    today_runs = [r for r in ac.get("runs", []) if r["date"] == today_str]
+                for dz in data.get("dropzones", []):
+                    today_runs = [r for r in dz.get("runs", []) if r["date"] == today_str]
                     if today_runs:
-                        msg = f"🌅 *Riassunto Giornata*\nL'aereo {ac['reg']} oggi ha completato *{len(today_runs)} decolli* registrati."
-                        broadcast_telegram(ac["reg"], msg)
+                        msg = f"🌅 *Riassunto Giornata @ {dz['name']}*\nOggi completati *{len(today_runs)} decolli* registrati (Velivolo: {dz.get('active_reg')})."
+                        broadcast_telegram(dz["id"], msg)
                 daily_summary_sent = True
         else:
-            daily_summary_sent = False # Resetta per il giorno successivo
+            daily_summary_sent = False
 
-        for reg, tracker in trackers.items():
-            url = f"https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds={tracker.info['center_lat']+0.3},{tracker.info['center_lat']-0.3},{tracker.info['center_lon']-0.3},{tracker.info['center_lon']+0.3}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=0&air=1&vehicles=0&estimated=1"
+        # Scansione radar di ogni dropzone
+        for dz_id, tracker in trackers.items():
+            url = f"https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds={tracker.center_lat+0.25},{tracker.center_lat-0.25},{tracker.center_lon-0.25},{tracker.center_lon+0.25}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=0&air=1&vehicles=0&estimated=1"
             try:
                 r = requests.get(url, headers=HEADERS, timeout=5)
                 if r.status_code == 200:
@@ -292,10 +363,12 @@ def main():
                     found = False
                     for k, val in feed.items():
                         if k in ["full_count", "version"]: continue
-                        if (val[9] if len(val) > 9 else "") == reg:
+                        plane_reg = val[9] if len(val) > 9 else ""
+                        if plane_reg in fleet:
                             found = True
-                            tracker.process_point(val[1], val[2], val[3] or 0, val[4] or 0, val[5] or 0, val[15] or 0)
-                    if not found: tracker.check_signal_timeout()
+                            tracker.process_point(plane_reg, val[1], val[2], val[3] or 0, val[4] or 0, val[5] or 0, val[15] or 0)
+                    if not found:
+                        tracker.check_signal_timeout()
             except: pass
         time.sleep(6)
 
