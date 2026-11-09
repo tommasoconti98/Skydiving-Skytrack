@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>SkyTrack Drop-Log</title>
   
   <!-- Leaflet CSS -->
@@ -34,6 +34,7 @@
     /* VISTA 1: HOME FLOTTA */
     #view-fleet {
       min-height: 100vh;
+      min-height: 100dvh;
       padding: 24px 16px;
       display: block;
     }
@@ -132,6 +133,7 @@
     #view-detail {
       display: none;
       height: 100vh;
+      height: 100dvh;
       width: 100vw;
       flex-direction: column;
       overflow: hidden;
@@ -251,7 +253,7 @@
       background: #0d0d0d;
     }
 
-    /* BARRA FLUTTUANTE IN BASSO (STORICO + CERCHIETTO FLIGHTRADAR24) */
+    /* BARRA FLUTTUANTE IN BASSO */
     .bottom-floating-bar {
       position: absolute;
       bottom: 24px;
@@ -262,8 +264,16 @@
       gap: 12px;
       z-index: 1000;
     }
+    
+    /* SU MOBILE: SPAZIO EXTRA PER NON FINIRE DIETRO LA BARRA DI SAFARI/CHROME */
+    @media (max-width: 768px) {
+      .bottom-floating-bar {
+        bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+      }
+    }
+
     .btn-storico-pill {
-      background: rgba(24, 24, 27, 0.92);
+      background: rgba(24, 24, 27, 0.94);
       backdrop-filter: blur(8px);
       border: 1px solid #3f3f46;
       border-radius: 9999px;
@@ -380,6 +390,11 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+    @media (max-width: 768px) {
+      .drawer-list {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px));
+      }
     }
     .run-item {
       background: #1c1c1f;
@@ -507,10 +522,8 @@
       if (map) return;
       map = L.map('map', { zoomControl: false, attributionControl: false }).setView([42.5, 12.5], 7);
 
-      // Attribution minimale in basso a destra
       L.control.attribution({ position: 'bottomright', prefix: 'Leaflet | Esri Satellite' }).addTo(map);
 
-      // Layer Satellitare Esri
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         maxZoom: 18
       }).addTo(map);
@@ -576,15 +589,12 @@
       document.getElementById('detail-title').textContent = `${reg} - ${fullName}`;
       document.getElementById('drawer-title').textContent = `Lanci Registrati - ${reg}`;
 
-      // Configura cerchietto Flightradar24
       const fr24Btn = document.getElementById('btn-fr24');
       fr24Btn.href = `https://www.flightradar24.com/data/aircraft/${reg.toLowerCase()}`;
 
-      // Cambio schermata
       document.getElementById('view-fleet').style.display = 'none';
       document.getElementById('view-detail').style.display = 'flex';
 
-      // Inizializza mappa e carica ultimo lancio
       initMap();
       setTimeout(() => { map.invalidateSize(); }, 120);
 
@@ -609,7 +619,6 @@
     }
 
     async function loadRun(runMeta) {
-      // Aggiorna metriche numeriche
       document.getElementById('val-heading').textContent = runMeta.heading_deg;
       document.getElementById('val-speed').textContent = runMeta.speed_kt;
       
@@ -633,7 +642,6 @@
         if (startMarker) map.removeLayer(startMarker);
         if (endMarker) map.removeLayer(endMarker);
 
-        // Traccia arancione esatta
         activePolyline = L.polyline(latlngs, {
           color: '#ff6d00',
           weight: 4.5,
@@ -641,7 +649,6 @@
           lineJoin: 'round'
         }).addTo(map);
 
-        // Punto Inizio verde
         startMarker = L.circleMarker(latlngs[0], {
           radius: 7,
           fillColor: '#00e676',
@@ -650,7 +657,6 @@
           fillOpacity: 1
         }).addTo(map);
 
-        // Punto Picchiata rosso
         endMarker = L.circleMarker(latlngs[latlngs.length - 1], {
           radius: 7,
           fillColor: '#ff1744',
