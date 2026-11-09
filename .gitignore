@@ -1,3 +1,6 @@
 imports/
 *.csv
 bot_config.json
+__pycache__/
+*.pyc
+data/telegram_users.json

@@ -15,19 +15,25 @@ DATA_DIR = os.path.join(REPO_DIR, "data")
 RUNS_DIR = os.path.join(DATA_DIR, "runs")
 INDEX_PATH = os.path.join(DATA_DIR, "index.json")
 TELEGRAM_USERS_FILE = os.path.join(DATA_DIR, "telegram_users.json")
+BOT_CFG_FILE = os.path.join(REPO_DIR, "bot_config.json")
 
 # ================= TELEGRAM CONFIG =================
-CFG_FILE = os.path.join(REPO_DIR, "bot_config.json")
 BOT_TOKEN = ""
-if os.path.exists(CFG_FILE):
+if os.path.exists(BOT_CFG_FILE):
     try:
-        with open(CFG_FILE, "r") as cf:
+        with open(BOT_CFG_FILE, "r") as cf:
             BOT_TOKEN = json.load(cf).get("bot_token", "")
-    except: pass
+    except Exception as e:
+        print(f"Errore lettura bot_config.json: {e}")
+
 if not BOT_TOKEN:
     BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 
-bot = telebot.TeleBot(BOT_TOKEN)
+if not BOT_TOKEN:
+    print("⚠️ ATTENZIONE: Nessun BOT_TOKEN trovato in bot_config.json o env!")
+    bot = None
+else:
+    bot = telebot.TeleBot(BOT_TOKEN)
 
 # ================= GESTIONE UTENTI TELEGRAM ========
 def load_telegram_users():
@@ -43,6 +49,7 @@ def save_telegram_users(users):
         json.dump(users, f, indent=2)
 
 def broadcast_telegram(target_key, message):
+    if not bot: return
     users = load_telegram_users()
     for chat_id, sub in users.items():
         if sub == target_key or sub == "ALL":
@@ -51,64 +58,66 @@ def broadcast_telegram(target_key, message):
             except Exception as e:
                 print(f"Errore invio Telegram a {chat_id}: {e}")
 
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    bot.reply_to(message, "✈️ *Benvenuto su SkyTrack Bot!*\nUsa /lista per scegliere quale Dropzone seguire.", parse_mode="Markdown")
+if bot:
+    @bot.message_handler(commands=['start'])
+    def handle_start(message):
+        bot.reply_to(message, "✈️ *Benvenuto su SkyTrack Bot!*\nUsa /lista per scegliere quale Dropzone seguire.", parse_mode="Markdown")
 
-@bot.message_handler(commands=['stato'])
-def handle_stato(message):
-    dzs = load_dropzones()
-    bot.reply_to(message, f"🟢 *Sistema Online*\nIl radar sta monitorando {len(dzs)} dropzone.", parse_mode="Markdown")
+    @bot.message_handler(commands=['stato'])
+    def handle_stato(message):
+        dzs = load_dropzones()
+        bot.reply_to(message, f"🟢 *Sistema Online*\nIl radar sta monitorando {len(dzs)} dropzone.", parse_mode="Markdown")
 
-@bot.message_handler(commands=['lista'])
-def handle_lista(message):
-    dzs = load_dropzones()
-    msg = "📋 *Dropzone monitorate:*\n\n"
-    for dz in dzs:
-        clean_cmd = dz["id"].upper()
-        msg += f"• *{dz['name']}*\n  Velivolo attuale: `{dz.get('active_reg', '--')}`\n  👉 Segui: /{clean_cmd}\n\n"
-    msg += "Clicca sul comando della dropzone per ricevere le sue notifiche.\nUsa /stop per disattivarle in qualsiasi momento."
-    bot.reply_to(message, msg, parse_mode="Markdown")
+    @bot.message_handler(commands=['lista'])
+    def handle_lista(message):
+        dzs = load_dropzones()
+        msg = "📋 *Dropzone monitorate:*\n\n"
+        for dz in dzs:
+            clean_cmd = dz["id"].upper()
+            msg += f"• *{dz['name']}*\n  Velivolo attuale: `{dz.get('active_reg', '--')}`\n  👉 Segui: /{clean_cmd}\n\n"
+        msg += "Clicca sul comando della dropzone per ricevere le sue notifiche.\nUsa /stop per disattivarle in qualsiasi momento."
+        bot.reply_to(message, msg, parse_mode="Markdown")
 
-@bot.message_handler(commands=['stop', 'annulla', 'silenzia'])
-def handle_stop(message):
-    users = load_telegram_users()
-    cid = str(message.chat.id)
-    if cid in users:
-        del users[cid]
-        save_telegram_users(users)
-        bot.reply_to(message, "🔕 *Notifiche disattivate!*\nNon riceverai più aggiornamenti.\nPer riattivarle usa /lista.", parse_mode="Markdown")
-    else:
-        bot.reply_to(message, "ℹ️ Non avevi alcuna notifica o iscrizione attiva.\nUsa /lista per scegliere cosa seguire.", parse_mode="Markdown")
-
-@bot.message_handler(func=lambda msg: msg.text.startswith('/'))
-def handle_custom_command(message):
-    cmd = message.text[1:].upper().replace("-", "")
-    dzs = load_dropzones()
-    fleet = load_fleet()
-    
-    # 1. Match per Dropzone ID
-    for dz in dzs:
-        if dz["id"].upper() == cmd:
-            users = load_telegram_users()
-            users[str(message.chat.id)] = dz["id"]
+    @bot.message_handler(commands=['stop', 'annulla', 'silenzia'])
+    def handle_stop(message):
+        users = load_telegram_users()
+        cid = str(message.chat.id)
+        if cid in users:
+            del users[cid]
             save_telegram_users(users)
-            bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai le notifiche per *{dz['name']}* (Velivolo: `{dz.get('active_reg', '--')}`).", parse_mode="Markdown")
-            return
+            bot.reply_to(message, "🔕 *Notifiche disattivate!*\nNon riceverai più aggiornamenti.\nPer riattivarle usa /lista.", parse_mode="Markdown")
+        else:
+            bot.reply_to(message, "ℹ️ Non avevi alcuna notifica o iscrizione attiva.\nUsa /lista per scegliere cosa seguire.", parse_mode="Markdown")
 
-    # 2. Match per Marche Aereo
-    for reg in fleet.keys():
-        if reg.replace("-", "").upper() == cmd:
-            users = load_telegram_users()
-            users[str(message.chat.id)] = reg
-            save_telegram_users(users)
-            bot.reply_to(message, f"✅ Iscrizione confermata per il velivolo *{reg}*.", parse_mode="Markdown")
-            return
+    @bot.message_handler(func=lambda msg: msg.text.startswith('/'))
+    def handle_custom_command(message):
+        cmd = message.text[1:].upper().replace("-", "")
+        dzs = load_dropzones()
+        fleet = load_fleet()
+        
+        for dz in dzs:
+            if dz["id"].upper() == cmd:
+                users = load_telegram_users()
+                users[str(message.chat.id)] = dz["id"]
+                save_telegram_users(users)
+                bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai le notifiche per *{dz['name']}* (Velivolo: `{dz.get('active_reg', '--')}`).", parse_mode="Markdown")
+                return
 
-    if cmd not in ["START", "STATO", "LISTA", "STOP", "ANNULLA", "SILENZIA"]:
-        bot.reply_to(message, "Comando non riconosciuto. Usa /lista per vedere l'elenco.")
+        for reg in fleet.keys():
+            if reg.replace("-", "").upper() == cmd:
+                users = load_telegram_users()
+                users[str(message.chat.id)] = reg
+                save_telegram_users(users)
+                bot.reply_to(message, f"✅ Iscrizione confermata per il velivolo *{reg}*.", parse_mode="Markdown")
+                return
+
+        if cmd not in ["START", "STATO", "LISTA", "STOP", "ANNULLA", "SILENZIA"]:
+            bot.reply_to(message, "Comando non riconosciuto. Usa /lista per vedere l'elenco.")
 
 def run_bot():
+    if not bot:
+        print("⚠️ Bot Telegram disattivato (manca token).")
+        return
     print("🤖 Bot Telegram avviato in background.")
     bot.infinity_polling(timeout=60, long_polling_timeout=30)
 
@@ -213,7 +222,6 @@ class DropzoneTracker:
         v_rate_fpm = calc_v_rate
         point = {"time": now, "lat": lat, "lon": lon, "track": track, "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm}
 
-        # ALERT TELEGRAM: Decollo
         if alt_m > 350 and v_rate_fpm > 400 and not self.is_flying:
             self.is_flying = True
             model = self.fleet.get(self.active_reg, {}).get("model", "Aereo")
@@ -253,7 +261,6 @@ class DropzoneTracker:
             self.finalize_run()
             self.reset()
         
-        # Timeout 40 minuti: aereo a terra
         if self.is_flying and self.last_seen > 0 and (now - self.last_seen) > 2400:
             self.is_flying = False
             msg = f"💤 *Tracciamento in pausa a {self.dz_name}*\\nNessun segnale da {self.active_reg} da 40 minuti (Atterrato)."
@@ -280,7 +287,6 @@ class DropzoneTracker:
         dz_entry = next((d for d in data.get("dropzones", []) if d["id"] == self.dz_id), None)
         run_num = len([r for r in dz_entry.get("runs", []) if r.get("date") == d_str]) + 1 if dz_entry else 1
 
-        # TELEGRAM: Riassunto Lancio
         model = self.fleet.get(self.active_reg, {}).get("model", "")
         msg = f"🪂 *Lancio Completato!*\\n📍 *{self.dz_name}* — Decollo #{run_num}\\n"
         msg += f"✈️ Velivolo: *{self.active_reg}* ({model})\\n\\n"
@@ -291,7 +297,6 @@ class DropzoneTracker:
         broadcast_telegram(self.dz_id, msg)
         broadcast_telegram(self.active_reg, msg)
 
-        # Salvataggio file del lancio
         dz_dir = os.path.join(RUNS_DIR, self.dz_id)
         os.makedirs(dz_dir, exist_ok=True)
         f_name = f"{d_str}_run_{run_num:02d}.json"
@@ -353,12 +358,10 @@ def main():
         now_time = time.time()
         dt_now = datetime.datetime.now()
         
-        # Heartbeat ogni 30 minuti
         if (now_time - last_heartbeat) >= 1800:
             print(f"💓 [HEARTBEAT] Monitor attivo su {len(trackers)} dropzone | Bot Telegram online.")
             last_heartbeat = now_time
 
-        # Riassunto Giornata alle 20:30 locali
         if dt_now.hour == 20 and dt_now.minute == 30:
             if not daily_summary_sent:
                 today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
@@ -372,7 +375,6 @@ def main():
         else:
             daily_summary_sent = False
 
-        # Scansione radar di ogni dropzone
         for dz_id, tracker in trackers.items():
             url = f"https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds={tracker.center_lat+0.25},{tracker.center_lat-0.25},{tracker.center_lon-0.25},{tracker.center_lon+0.25}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=0&air=1&vehicles=0&estimated=1"
             try:
