@@ -55,6 +55,25 @@
     .card-arrow { font-size: 22px; color: #444; font-weight: 700; }
     .fleet-card:hover .card-arrow { color: #ffcc00; }
 
+    /* CREDITS FOOTER */
+    .fleet-footer {
+      max-width: 650px; margin: 28px auto 36px; padding: 18px 16px 24px;
+      width: 100%; border-top: 1px solid #1c1c1c; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .footer-credit { font-size: 13px; color: #a1a1aa; }
+    .footer-credit strong { color: #ffffff; font-weight: 700; }
+    .footer-email {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: #ffcc00; text-decoration: none; font-size: 13px; font-weight: 700;
+      padding: 7px 16px; border-radius: 999px; background: #161616;
+      border: 1px solid #27272a; transition: all 0.15s ease;
+    }
+    .footer-email:hover, .footer-email:active {
+      background: #222226; border-color: #ffcc00; color: #fff; transform: translateY(-1px);
+    }
+    .footer-note { font-size: 11px; color: #71717a; }
+
     /* VISTA 2: DETTAGLIO AEREO (MAPPA & HUD) */
     #detail-screen {
       width: 100%; height: 100%; display: none; flex-direction: column;
@@ -157,8 +176,18 @@
       <div class="fleet-title">✈ SKYTRACK DROP-LOG</div>
       <div class="fleet-subtitle">Seleziona un velivolo per vedere la telemetria di lancio</div>
     </div>
+    
     <div class="fleet-grid" id="fleet-grid">
       <div style="padding: 20px; color: #666;">Caricamento flotta in corso...</div>
+    </div>
+
+    <!-- CREDITS -->
+    <div class="fleet-footer">
+      <div class="footer-credit">Sviluppato da <strong>Tommaso Conti</strong></div>
+      <a class="footer-email" href="mailto:tommasoconti98@gmail.com?subject=SkyTrack%20-%20Richiesta%20di%20aggiunta%20aereo%20%2F%20dropzone&body=Ciao%20Tommaso%2C%0A%0Ami%20piacerebbe%20aggiungere%20questo%20aereo%2Fdropzone%20su%20SkyTrack%3A%0A%0A-%20Marche%20dell%27aereo%3A%20%0A-%20Nome%20della%20dropzone%3A%20%0A%0A%2AEntrambi%20i%20campi%20sono%20essenziali%20per%20l%27aggiunta%20sul%20portale.%0A%0AGrazie%21">
+        <span>✉</span> tommasoconti98@gmail.com
+      </a>
+      <div class="footer-note">Clicca sulla mail per richiedere l'aggiunta di un velivolo o di una dropzone</div>
     </div>
   </div>
 
@@ -217,6 +246,74 @@
     let map = null;
     let currentTrajectoryLine = null;
     let markersLayer = null;
+
+    // Rileva automaticamente il fuso orario dalle coordinate geografiche (lat, lon)
+    function getTimezoneFromCoords(lat, lon) {
+      if (lat == null || lon == null) return 'Europe/Rome';
+
+      // Isole Canarie
+      if (lat >= 27 && lat <= 30 && lon >= -19 && lon <= -13) return 'Atlantic/Canary';
+      // Portogallo Continentale
+      if (lat >= 36.5 && lat <= 42.5 && lon >= -10.0 && lon <= -6.0) return 'Europe/Lisbon';
+      // Regno Unito & Irlanda
+      if (lat >= 49.5 && lat <= 61.0 && lon >= -11.0 && lon <= 2.0) return 'Europe/London';
+      // Islanda
+      if (lat >= 63 && lat <= 67 && lon >= -25 && lon <= -13) return 'Atlantic/Reykjavik';
+
+      // Europa Orientale (Grecia, Cipro, Romania, Bulgaria, Finlandia, Paesi Baltici)
+      if (lat >= 34 && lat <= 42 && lon >= 19.5 && lon <= 29.0) return 'Europe/Athens';
+      if (lat >= 34 && lat <= 36 && lon >= 32.0 && lon <= 35.0) return 'Asia/Nicosia';
+      if (lat >= 41 && lat <= 48.5 && lon >= 22.5 && lon <= 30.0) return 'Europe/Bucharest';
+      if (lat >= 53.5 && lat <= 71 && lon >= 20.5 && lon <= 32.0) return 'Europe/Helsinki';
+
+      // Europa Centrale (CET/CEST: Italia, Spagna, Francia, Germania, Svizzera, Austria, Rep. Ceca, Polonia, ecc.)
+      if (lat >= 35 && lat <= 72 && lon >= -10.0 && lon <= 25.0) return 'Europe/Rome';
+
+      // Emirati Arabi (es. Skydive Dubai)
+      if (lat >= 22 && lat <= 27 && lon >= 51.0 && lon <= 57.0) return 'Asia/Dubai';
+
+      // Nord America (USA & Canada)
+      if (lat >= 24 && lat <= 60 && lon >= -130 && lon <= -60) {
+        if (lon < -114) return 'America/Los_Angeles'; // Fuso Pacifico
+        if (lon < -102) return 'America/Denver';      // Fuso Montagne
+        if (lon < -85)  return 'America/Chicago';     // Fuso Centrale
+        return 'America/New_York';                    // Fuso Orientale
+      }
+
+      // Australia
+      if (lat >= -45 && lat <= -10 && lon >= 110 && lon <= 155) {
+        if (lon < 129) return 'Australia/Perth';
+        if (lon < 138) return 'Australia/Adelaide';
+        return 'Australia/Sydney';
+      }
+
+      return 'Europe/Rome';
+    }
+
+    // Converte timestamp UTC nell'ora locale calcolata
+    function formatLocalTime(dateStr, timeStr, tz) {
+      try {
+        const d = new Date(`${dateStr}T${timeStr}:00Z`);
+        if (isNaN(d.getTime())) return timeStr;
+        return d.toLocaleTimeString('it-IT', {
+          timeZone: tz,
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch (e) {
+        return timeStr;
+      }
+    }
+
+    function formatLocalDate(dateStr, timeStr, tz) {
+      try {
+        const d = new Date(`${dateStr}T${timeStr}:00Z`);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('sv-SE', { timeZone: tz });
+      } catch (e) {
+        return dateStr;
+      }
+    }
 
     function initMap() {
       if (!map) {
@@ -318,14 +415,20 @@
         return;
       }
 
+      // Fuso orario calcolato automaticamente da center_lat e center_lon
+      const tz = getTimezoneFromCoords(selectedAircraft.center_lat, selectedAircraft.center_lon);
+
       runs.forEach(r => {
+        const localTime = formatLocalTime(r.date, r.time, tz);
+        const localDate = formatLocalDate(r.date, r.time, tz);
+
         const item = document.createElement('div');
         item.className = 'run-item';
         item.onclick = () => { loadRun(r.file); toggleHistory(false); };
         item.innerHTML = `
           <div>
-            <div class="run-date">${r.date} - ${r.title}</div>
-            <div class="run-time">Ore: ${r.time} UTC | Durata: ${r.duration_sec}s</div>
+            <div class="run-date">${localDate} - ${r.title}</div>
+            <div class="run-time">Ore: ${localTime} | Durata: ${r.duration_sec}s</div>
           </div>
           <div class="run-stats-tag">${r.heading_deg}° / ${r.speed_kt} kt</div>
         `;
