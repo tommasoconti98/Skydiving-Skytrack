@@ -1,338 +1,631 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SkyTrack - Dropzone Run Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyTrack - Skydiving Run Monitor</title>
   
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+  
   <style>
+    :root {
+      --bg-dark: #121212;
+      --card-bg: #1e1e1e;
+      --card-hover: #262626;
+      --card-border: #333333;
+      --accent-cyan: #00e5ff;
+      --fr24-yellow: #fbc02d;
+      --text-main: #f5f5f5;
+      --text-muted: #9e9e9e;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html {
-      width: 100%; height: 100%; background: #080808; color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, monospace;
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
       overflow: hidden;
     }
 
-    /* VISTA 1: LISTA FLOTTA (HOME) */
-    #fleet-screen {
-      width: 100%; height: 100%; display: flex; flex-direction: column;
-      background: #0a0a0a; overflow-y: auto;
-    }
-    .fleet-header {
-      padding: 24px 18px 16px; background: #121212; border-bottom: 1px solid #222;
-    }
-    .fleet-title { font-size: 20px; font-weight: 900; color: #ffcc00; letter-spacing: 1px; }
-    .fleet-subtitle { font-size: 12px; color: #888; margin-top: 4px; font-weight: 500; }
-    
-    .fleet-grid {
-      padding: 16px; display: flex; flex-direction: column; gap: 12px; max-width: 650px; margin: 0 auto; width: 100%;
-    }
-    .fleet-card {
-      background: #141414; border: 1px solid #282828; border-radius: 12px;
-      padding: 16px; display: flex; justify-content: space-between; align-items: center;
-      cursor: pointer; transition: all 0.15s ease;
-    }
-    .fleet-card:hover {
-      background: #1c1c1c; border-color: #ffcc00; transform: translateY(-2px);
-    }
-    .card-left { display: flex; flex-direction: column; gap: 4px; }
-    .card-reg { font-size: 20px; font-weight: 900; color: #00e5ff; letter-spacing: 0.5px; }
-    .card-dz { font-size: 14px; font-weight: 700; color: #fff; }
-    .card-model { font-size: 12px; color: #777; }
-    .card-arrow { font-size: 22px; color: #444; font-weight: 700; }
-    .fleet-card:hover .card-arrow { color: #ffcc00; }
-
-    /* VISTA 2: DETTAGLIO AEREO (MAPPA & HUD) */
-    #detail-screen {
-      width: 100%; height: 100%; display: none; flex-direction: column;
-    }
-    #top-bar {
-      background: #0d0d0d; padding: 10px 14px; display: flex;
-      justify-content: space-between; align-items: center;
-      border-bottom: 2px solid #222; z-index: 1000;
-    }
-    .btn-back {
-      background: #202020; color: #fff; border: 1px solid #444;
-      padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800;
-      cursor: pointer;
-    }
-    .btn-back:hover { background: #333; color: #ffcc00; border-color: #ffcc00; }
-    .active-ac-title { font-size: 14px; font-weight: 800; color: #ffcc00; }
-
-    /* Dashboard Metriche */
-    #hud {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 6px; padding: 8px; background: #121212; border-bottom: 2px solid #282828;
+    header {
+      background-color: #181818;
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       z-index: 1000;
     }
-    .metric-card {
-      background: #1a1a1a; padding: 8px 10px; border-radius: 6px;
-      border: 1px solid #2a2a2a; display: flex; flex-direction: column;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
-    .metric-title { font-size: 10px; font-weight: 800; color: #777; text-transform: uppercase; }
-    .metric-val-wrap { display: flex; align-items: baseline; gap: 4px; margin-top: 2px; }
-    .metric-val { font-size: 32px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-    .metric-unit { font-size: 13px; font-weight: 700; opacity: 0.8; }
-    
-    .c-alt { color: #ffcc00; }
-    .c-trk { color: #00e5ff; }
-    .c-spd { color: #00ff66; }
-    .c-sep { color: #ff3366; }
+    .brand span { color: var(--accent-cyan); }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 58px);
+      position: relative;
+    }
 
     /* Mappa */
-    #map { flex: 1; width: 100%; background: #050505; }
+    #map {
+      flex: 1;
+      height: 100%;
+      background: #0d0d0d;
+    }
 
-    /* Pulsante & Pannello Storico */
-    #history-toggle-btn {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: #181818; color: #fff; border: 1px solid #444;
-      padding: 12px 24px; border-radius: 30px; font-size: 13px; font-weight: 800;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8); cursor: pointer; z-index: 1100;
+    /* Sidebar Flotta */
+    .sidebar {
+      width: 440px;
+      max-width: 100%;
+      background-color: rgba(18, 18, 18, 0.95);
+      backdrop-filter: blur(8px);
+      border-left: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      z-index: 1000;
     }
-    #history-toggle-btn:hover { background: #222; border-color: #00e5ff; }
 
-    #history-drawer {
-      position: absolute; bottom: 0; left: 0; width: 100%; max-height: 55%;
-      background: #111; border-top: 2px solid #333; z-index: 1200;
-      display: none; flex-direction: column; border-radius: 16px 16px 0 0;
-      box-shadow: 0 -8px 30px rgba(0,0,0,0.9);
+    .sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
     }
-    .drawer-header {
-      padding: 14px 16px; display: flex; justify-content: space-between;
-      align-items: center; border-bottom: 1px solid #222;
-    }
-    .drawer-title { font-size: 14px; font-weight: 800; color: #fff; }
-    .close-btn { background: none; border: none; color: #888; font-size: 18px; cursor: pointer; }
-    .runs-list { overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .run-item {
-      background: #1c1c1c; padding: 12px 14px; border-radius: 8px;
-      display: flex; justify-content: space-between; align-items: center;
-      cursor: pointer; border: 1px solid #292929;
-    }
-    .run-item:hover { border-color: #ffcc00; background: #222; }
-    .run-date { font-size: 13px; font-weight: 800; color: #fff; }
-    .run-time { font-size: 11px; color: #888; margin-top: 2px; }
-    .run-stats-tag { font-size: 12px; font-weight: 700; color: #00e5ff; }
 
-    @media (max-width: 650px) {
-      #hud { grid-template-columns: 1fr 1fr; }
-      .metric-val { font-size: 28px; }
+    .fleet-list {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Scheda Aereo */
+    .aircraft-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .aircraft-card:hover {
+      border-color: #444;
+      background-color: var(--card-hover);
+    }
+    .aircraft-card.active {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.15);
+    }
+
+    .aircraft-header {
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .aircraft-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .aircraft-reg {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #555;
+    }
+    .status-dot.active { background-color: #00e676; box-shadow: 0 0 8px #00e676; }
+
+    .aircraft-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Thumbnail Foto sulla destra */
+    .aircraft-photo-thumb {
+      width: 76px;
+      height: 50px;
+      border-radius: 6px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: #151515;
+      position: relative;
+    }
+    .aircraft-photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s ease;
+    }
+    .aircraft-photo-thumb:hover img {
+      transform: scale(1.08);
+    }
+
+    /* Corpo Dettagli Espansi */
+    .aircraft-body {
+      display: none;
+      padding: 14px;
+      background-color: #181818;
+      border-top: 1px solid var(--card-border);
+    }
+    .aircraft-card.active .aircraft-body {
+      display: block;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .stat-item {
+      background-color: #222;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #2d2d2d;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .stat-val {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      margin-top: 2px;
+    }
+
+    /* Azioni Card: Cronologia e Pulsante FR24 */
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-history {
+      flex: 1;
+      padding: 10px 14px;
+      background-color: #292929;
+      border: 1px solid #3d3d3d;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-history:hover {
+      background-color: #383838;
+      border-color: #555;
+    }
+
+    /* Cerchietto Pulsante FlightRadar24 */
+    .btn-fr24 {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background-color: #242217;
+      border: 1.5px solid var(--fr24-yellow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--fr24-yellow);
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+      text-decoration: none;
+      position: relative;
+    }
+    .btn-fr24:hover {
+      background-color: var(--fr24-yellow);
+      color: #000;
+      transform: scale(1.06);
+      box-shadow: 0 0 12px rgba(251, 192, 45, 0.4);
+    }
+    .btn-fr24 svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    /* Modal Storico */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-content {
+      background: #181818;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      width: 600px;
+      max-width: 100%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-size: 1.1rem; }
+    .btn-close {
+      background: none;
+      border: none;
+      color: #999;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .btn-close:hover { color: #fff; }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: #202020;
+      border: 1px solid #2d2d2d;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .history-item:hover {
+      background: #2a2a2a;
+      border-color: #444;
+    }
+    .hist-title { font-weight: 600; font-size: 0.95rem; }
+    .hist-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+    .hist-stats { font-weight: 600; font-size: 0.95rem; color: var(--accent-cyan); text-align: right; }
+
+    /* Mobile Responsive */
+    @media (max-width: 850px) {
+      .main-container { flex-direction: column-reverse; }
+      .sidebar { width: 100%; height: 50%; border-left: none; border-top: 1px solid var(--card-border); }
+      #map { height: 50%; }
     }
   </style>
 </head>
 <body>
 
-  <!-- SCHERMATA 1: SELEZIONE FLOTTA -->
-  <div id="fleet-screen">
-    <div class="fleet-header">
-      <div class="fleet-title">✈ SKYTRACK DROP-LOG</div>
-      <div class="fleet-subtitle">Seleziona un velivolo per vedere la telemetria di lancio</div>
+  <header>
+    <div class="brand">
+      <span>✈</span> SkyTrack <span>Live</span>
     </div>
-    <div class="fleet-grid" id="fleet-grid">
-      <div style="padding: 20px; color: #666;">Caricamento flotta in corso...</div>
+    <div id="last-update" style="font-size: 0.8rem; color: var(--text-muted);">
+      Caricamento flotta...
     </div>
-  </div>
+  </header>
 
-  <!-- SCHERMATA 2: DETTAGLIO AEREO -->
-  <div id="detail-screen">
-    <div id="top-bar">
-      <button class="btn-back" onclick="showFleetScreen()">← FLOTTA</button>
-      <div class="active-ac-title" id="active-ac-title">--</div>
-      <div style="width: 70px;"></div>
-    </div>
-
-    <div id="hud">
-      <div class="metric-card">
-        <div class="metric-title">Quota Lancio</div>
-        <div class="metric-val-wrap c-alt"><span class="metric-val" id="val-alt">--</span><span class="metric-unit">m</span></div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">Asse di Lancio</div>
-        <div class="metric-val-wrap c-trk"><span class="metric-val" id="val-trk">--</span><span class="metric-unit">°</span></div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">Ground Speed</div>
-        <div class="metric-val-wrap c-spd"><span class="metric-val" id="val-spd">--</span><span class="metric-unit">kt</span></div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-title">Sep 300m</div>
-        <div class="metric-val-wrap c-sep"><span class="metric-val" id="val-sep">--</span><span class="metric-unit">s</span></div>
-      </div>
-    </div>
-
+  <div class="main-container">
     <div id="map"></div>
-
-    <button id="history-toggle-btn" onclick="toggleHistory(true)">📂 STORICO LANCI (ULTIMI 30 GG)</button>
-
-    <div id="history-drawer">
-      <div class="drawer-header">
-        <div class="drawer-title" id="drawer-title">Storico Decolli</div>
-        <button class="close-btn" onclick="toggleHistory(false)">✕</button>
-      </div>
-      <div class="runs-list" id="runs-list"></div>
+    <div class="sidebar">
+      <div class="sidebar-header">Velivoli Monitorati</div>
+      <div class="fleet-list" id="fleet-container"></div>
     </div>
   </div>
+
+  <!-- Modal Storico -->
+  <div class="modal-overlay" id="history-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modal-title">Lanci Registrati</h3>
+        <button class="btn-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-list"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    let fleetConfig = [];
-    let masterIndex = null;
-    let selectedAircraft = null;
-    let map = null;
-    let currentTrajectoryLine = null;
-    let markersLayer = null;
+    let map, activePolyline = null, startMarker = null, endMarker = null;
+    let masterData = null;
+    let fleetConfig = {};
+    let activeReg = null;
 
+    // Inizializza la mappa con layer satellitare ESRI + CartoDB Dark Labels
     function initMap() {
-      if (!map) {
-        map = L.map('map', { zoomControl: false }).setView([40.4720, 14.9608], 14);
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          maxZoom: 18, attribution: 'Esri Satellite'
-        }).addTo(map);
-        markersLayer = L.layerGroup().addTo(map);
-      }
+      map = L.map('map', { zoomControl: false }).setView([42.5, 12.5], 7);
+      L.control.zoom({ position: 'topright' }).addTo(map);
+
+      // Mappa Satellitare ad alta risoluzione
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 18
+      }).addTo(map);
+
+      // Layer con confini e toponimi semi-trasparenti
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 18
+      }).addTo(map);
     }
 
-    async function loadApp() {
+    // Carica dati
+    async function loadData() {
       try {
-        // Carica la flotta configurata da aircraft.json
-        const fleetRes = await fetch('aircraft.json?v=' + Date.now());
-        fleetConfig = await fleetRes.json();
+        const [indexRes, fleetRes] = await Promise.all([
+          fetch('data/index.json?v=' + Date.now()).then(r => r.json()),
+          fetch('aircraft.json?v=' + Date.now()).then(r => r.json()).catch(() => [])
+        ]);
 
-        // Carica lo storico lanci da data/index.json
-        try {
-          const idxRes = await fetch('data/index.json?v=' + Date.now());
-          if (idxRes.ok) masterIndex = await idxRes.json();
-        } catch(e) {}
+        masterData = indexRes;
+        
+        // Mappa la configurazione flotta (per foto e coordinate)
+        if (Array.isArray(fleetRes)) {
+          fleetRes.forEach(ac => { fleetConfig[ac.reg] = ac; });
+        }
 
-        renderFleetList();
+        renderFleet();
+
+        if (masterData.last_updated) {
+          const d = new Date(masterData.last_updated);
+          document.getElementById('last-update').textContent = 'Ultimo agg: ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        }
       } catch (err) {
-        document.getElementById('fleet-grid').innerHTML = 
-          `<div style="color:#ff3366;padding:20px;">Errore caricamento aircraft.json: ${err.message}</div>`;
+        console.error('Errore caricamento dati:', err);
       }
     }
 
-    function renderFleetList() {
-      const grid = document.getElementById('fleet-grid');
-      grid.innerHTML = '';
+    // Renderizza la lista velivoli
+    function renderFleet() {
+      const container = document.getElementById('fleet-container');
+      container.innerHTML = '';
 
-      fleetConfig.forEach(ac => {
+      masterData.aircrafts.forEach(ac => {
+        const cfg = fleetConfig[ac.reg] || {};
+        const latestRun = (ac.runs && ac.runs.length > 0) ? ac.runs[0] : null;
+        const photoUrl = cfg.photo || '';
+        
         const card = document.createElement('div');
-        card.className = 'fleet-card';
-        card.onclick = () => openAircraft(ac);
+        card.className = `aircraft-card ${ac.reg === activeReg ? 'active' : ''}`;
+        card.id = `card-${ac.reg}`;
+
+        // Header riga velivolo con foto a destra
         card.innerHTML = `
-          <div class="card-left">
-            <div class="card-reg">${ac.reg}</div>
-            <div class="card-dz">${ac.name}</div>
-            <div class="card-model">${ac.model || 'Aereo da lancio'}</div>
+          <div class="aircraft-header" onclick="toggleCard('${ac.reg}')">
+            <div class="aircraft-info">
+              <div class="aircraft-reg">
+                <span class="status-dot ${latestRun ? 'active' : ''}"></span>
+                ${ac.reg}
+              </div>
+              <div class="aircraft-sub">${ac.name || cfg.name || ''}</div>
+            </div>
+
+            ${photoUrl ? `
+              <div class="aircraft-photo-thumb" title="Clicca per ingrandire foto">
+                <a href="${photoUrl}" target="_blank" onclick="event.stopPropagation()">
+                  <img src="${photoUrl}" alt="${ac.reg}" onerror="this.parentElement.style.display='none'">
+                </a>
+              </div>
+            ` : ''}
           </div>
-          <div class="card-arrow">›</div>
+
+          <div class="aircraft-body" id="body-${ac.reg}">
+            ${latestRun ? `
+              <div style="font-size: 0.78rem; color: #bbb; margin-bottom: 8px;">
+                Ultimo Lancio: <strong style="color:#fff;">${latestRun.date} - ${latestRun.time} UTC</strong> (${latestRun.title || ''})
+              </div>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <div class="stat-label">Asse di Lancio</div>
+                  <div class="stat-val">${latestRun.heading_deg}°</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Ground Speed</div>
+                  <div class="stat-val">${latestRun.speed_kt} kt</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Durata Run-In</div>
+                  <div class="stat-val">${latestRun.duration_sec}s</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-label">Separazione 300m</div>
+                  <div class="stat-val">${latestRun.speed_kt ? (300 / (latestRun.speed_kt * 0.514444)).toFixed(1) : 0}s</div>
+                </div>
+              </div>
+            ` : `
+              <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                Nessun lancio registrato di recente.
+              </div>
+            `}
+
+            <div class="card-actions">
+              <button class="btn-history" onclick="openHistory('${ac.reg}', event)">
+                <span>📋</span> Storico Lanci (${ac.runs ? ac.runs.length : 0})
+              </button>
+
+              <!-- Pulsante circolare FlightRadar24 -->
+              <a href="https://www.flightradar24.com/data/aircraft/${ac.reg.toLowerCase()}" 
+                 target="_blank" 
+                 rel="noopener noreferrer"
+                 class="btn-fr24" 
+                 title="Traccia live su Flightradar24 (${ac.reg})"
+                 onclick="event.stopPropagation()">
+                <svg viewBox="0 0 24 24">
+                  <!-- Icona radar/aereo stilizzato -->
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                  <path d="M12 6a6 6 0 0 0-6 6h2a4 4 0 0 1 4-4V6zm0-4A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8V2z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
         `;
-        grid.appendChild(card);
+
+        container.appendChild(card);
       });
     }
 
-    function openAircraft(ac) {
-      selectedAircraft = ac;
-      document.getElementById('fleet-screen').style.display = 'none';
-      document.getElementById('detail-screen').style.display = 'flex';
-      document.getElementById('active-ac-title').innerText = `${ac.reg} - ${ac.name}`;
-
-      initMap();
-      map.invalidateSize();
-
-      // Trova i lanci associati a questo aereo in masterIndex
-      let runs = [];
-      if (masterIndex && masterIndex.aircrafts) {
-        const found = masterIndex.aircrafts.find(a => a.reg === ac.reg);
-        if (found && found.runs) runs = found.runs;
-      }
-
-      renderRunsList(runs);
-
-      if (runs.length > 0) {
-        loadRun(runs[0].file);
+    // Espandi/Chiudi card
+    function toggleCard(reg) {
+      if (activeReg === reg) {
+        activeReg = null;
+        document.querySelectorAll('.aircraft-card').forEach(c => c.classList.remove('active'));
       } else {
-        clearHUD();
-        if (ac.center_lat && ac.center_lon) {
-          map.setView([ac.center_lat, ac.center_lon], 14);
+        activeReg = reg;
+        document.querySelectorAll('.aircraft-card').forEach(c => c.classList.remove('active'));
+        document.getElementById(`card-${reg}`).classList.add('active');
+
+        // Mostra sulla mappa l'ultimo lancio di questo aereo
+        const ac = masterData.aircrafts.find(a => a.reg === reg);
+        if (ac && ac.runs && ac.runs.length > 0) {
+          loadAndDrawRun(ac.runs[0].file);
         }
       }
     }
 
-    function showFleetScreen() {
-      document.getElementById('detail-screen').style.display = 'none';
-      document.getElementById('fleet-screen').style.display = 'flex';
-      toggleHistory(false);
-    }
-
-    function renderRunsList(runs) {
-      const listEl = document.getElementById('runs-list');
-      listEl.innerHTML = '';
-      document.getElementById('drawer-title').innerText = `Lanci Registrati - ${selectedAircraft.reg}`;
-
-      if (!runs || runs.length === 0) {
-        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Nessun lancio registrato negli ultimi 30 giorni per questo velivolo.</div>';
-        return;
-      }
-
-      runs.forEach(r => {
-        const item = document.createElement('div');
-        item.className = 'run-item';
-        item.onclick = () => { loadRun(r.file); toggleHistory(false); };
-        item.innerHTML = `
-          <div>
-            <div class="run-date">${r.date} - ${r.title}</div>
-            <div class="run-time">Ore: ${r.time} UTC | Durata: ${r.duration_sec}s</div>
-          </div>
-          <div class="run-stats-tag">${r.heading_deg}° / ${r.speed_kt} kt</div>
-        `;
-        listEl.appendChild(item);
-      });
-    }
-
-    async function loadRun(jsonPath) {
+    // Carica e disegna la traccia GPS sulla mappa
+    async function loadAndDrawRun(filePath) {
       try {
-        const res = await fetch(`data/runs/${jsonPath}?v=` + Date.now());
-        const data = await res.json();
+        const res = await fetch(`data/runs/${filePath}?v=` + Date.now());
+        const runData = await res.json();
+        if (!runData.points || runData.points.length === 0) return;
 
-        document.getElementById('val-alt').innerText = data.stats.altitude_m;
-        document.getElementById('val-trk').innerText = data.stats.heading_deg;
-        document.getElementById('val-spd').innerText = data.stats.ground_speed_kt;
-        document.getElementById('val-sep').innerText = data.stats.separation_sec;
+        const latlngs = runData.points.map(p => [p.lat, p.lon]);
 
-        if (currentTrajectoryLine) map.removeLayer(currentTrajectoryLine);
-        markersLayer.clearLayers();
+        if (activePolyline) map.removeLayer(activePolyline);
+        if (startMarker) map.removeLayer(startMarker);
+        if (endMarker) map.removeLayer(endMarker);
 
-        const points = data.points.map(p => [p.lat, p.lon]);
-        currentTrajectoryLine = L.polyline(points, { color: '#ff6600', weight: 5, opacity: 0.95 }).addTo(map);
+        // Traccia del Run-in
+        activePolyline = L.polyline(latlngs, {
+          color: '#00e5ff',
+          weight: 5,
+          opacity: 0.9,
+          lineJoin: 'round'
+        }).addTo(map);
 
-        L.circleMarker(points[0], { radius: 6, color: '#00ff66', fillColor: '#00ff66', fillOpacity: 1 })
-          .bindTooltip("Inizio Run").addTo(markersLayer);
-        L.circleMarker(points[points.length - 1], { radius: 7, color: '#ff0033', fillColor: '#ff0033', fillOpacity: 1 })
-          .bindTooltip("Fine Run / Picchiata").addTo(markersLayer);
+        // Marker Inizio
+        startMarker = L.circleMarker(latlngs[0], {
+          radius: 7,
+          fillColor: '#00e676',
+          color: '#fff',
+          weight: 2,
+          fillOpacity: 1
+        }).addTo(map).bindPopup(`<b>Inizio Run-in</b><br>${runData.stats.altitude_m}m - ${runData.stats.ground_speed_kt}kt`);
 
-        map.fitBounds(currentTrajectoryLine.getBounds(), { padding: [50, 50] });
-      } catch(e) {
-        console.error("Errore caricamento run:", e);
+        // Marker Uscita / Picchiata
+        endMarker = L.circleMarker(latlngs[latlngs.length - 1], {
+          radius: 7,
+          fillColor: '#ff1744',
+          color: '#fff',
+          weight: 2,
+          fillOpacity: 1
+        }).addTo(map).bindPopup(`<b>Fine Run / Picchiata</b><br>Asse: ${runData.stats.heading_deg}°`);
+
+        map.fitBounds(activePolyline.getBounds(), { padding: [50, 50], maxZoom: 15 });
+      } catch (err) {
+        console.error('Errore caricamento traccia:', err);
       }
     }
 
-    function clearHUD() {
-      document.getElementById('val-alt').innerText = '--';
-      document.getElementById('val-trk').innerText = '--';
-      document.getElementById('val-spd').innerText = '--';
-      document.getElementById('val-sep').innerText = '--';
-      if (currentTrajectoryLine) map.removeLayer(currentTrajectoryLine);
-      if (markersLayer) markersLayer.clearLayers();
+    // Gestione Modal Storico
+    function openHistory(reg, event) {
+      event.stopPropagation();
+      const ac = masterData.aircrafts.find(a => a.reg === reg);
+      if (!ac) return;
+
+      document.getElementById('modal-title').textContent = `Lanci Registrati - ${reg}`;
+      const list = document.getElementById('modal-list');
+      list.innerHTML = '';
+
+      if (!ac.runs || ac.runs.length === 0) {
+        list.innerHTML = '<div style="color:#777; text-align:center; padding:20px;">Nessun lancio disponibile.</div>';
+      } else {
+        ac.runs.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          item.innerHTML = `
+            <div>
+              <div class="hist-title">${r.date} - ${r.title || 'Lancio'}</div>
+              <div class="hist-sub">Ore: ${r.time} UTC | Durata: ${r.duration_sec}s</div>
+            </div>
+            <div class="hist-stats">
+              ${r.heading_deg}° / ${r.speed_kt} kt
+            </div>
+          `;
+          item.onclick = () => {
+            closeModal();
+            loadAndDrawRun(r.file);
+          };
+          list.appendChild(item);
+        });
+      }
+
+      document.getElementById('history-modal').classList.add('open');
     }
 
-    function toggleHistory(show) {
-      document.getElementById('history-drawer').style.display = show ? 'flex' : 'none';
+    function closeModal() {
+      document.getElementById('history-modal').classList.remove('open');
     }
 
-    loadApp();
+    window.onclick = function(event) {
+      const modal = document.getElementById('history-modal');
+      if (event.target === modal) closeModal();
+    };
+
+    window.onload = () => {
+      initMap();
+      loadData();
+      setInterval(loadData, 30000); // Ricarica dati ogni 30s
+    };
   </script>
 </body>
 </html>
