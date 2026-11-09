@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <!-- Icona Schermata Home iOS & Android -->
   <link rel="apple-touch-icon" href="skytrack-logo.jpg" />
   <link rel="icon" type="image/jpeg" href="skytrack-logo.jpg" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -22,7 +21,7 @@
       overflow: hidden;
     }
 
-    /* VISTA 1: LISTA DROPZONE (HOME) */
+    /* VISTA 1: LISTA DROPZONE */
     #fleet-screen {
       width: 100%; height: 100%; display: flex; flex-direction: column;
       background: #0a0a0a; overflow-y: auto;
@@ -45,15 +44,10 @@
       background: #1c1c1c; border-color: #ffcc00; transform: translateY(-2px);
     }
     .card-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-    
-    /* TITOLO = NOME DROPZONE */
     .card-dz-title { font-size: 20px; font-weight: 900; color: #00e5ff; letter-spacing: 0.5px; }
-    /* SOTTOTITOLO = MARCHE VELIVOLO ATTIVO */
     .card-reg-sub { font-size: 14px; font-weight: 700; color: #ffffff; margin-top: 2px; }
-    /* TERZA RIGA = MODELLO */
     .card-model { font-size: 12px; color: #777; }
 
-    /* FOTO DESTRA */
     .card-right {
       display: flex; align-items: center; gap: 12px; margin-left: 12px; flex-shrink: 0;
     }
@@ -65,7 +59,6 @@
     .card-arrow { font-size: 22px; color: #444; font-weight: 700; }
     .fleet-card:hover .card-arrow { color: #ffcc00; }
 
-    /* CREDITS FOOTER */
     .fleet-footer {
       max-width: 650px; margin: 28px auto 36px; padding: 18px 16px 24px;
       width: 100%; border-top: 1px solid #1c1c1c; text-align: center;
@@ -84,25 +77,37 @@
     }
     .footer-note { font-size: 11px; color: #71717a; }
 
-    /* VISTA 2: DETTAGLIO DROPZONE (MAPPA & HUD) */
+    /* VISTA 2: DETTAGLIO DROPZONE */
     #detail-screen {
       width: 100%; height: 100%; display: none; flex-direction: column;
       position: relative;
     }
     #top-bar {
-      background: #0d0d0d; padding: 10px 14px; display: flex;
-      justify-content: space-between; align-items: center;
-      border-bottom: 2px solid #222; z-index: 1000;
+      background: #0d0d0d; padding: 8px 12px; display: flex;
+      align-items: center; justify-content: flex-start; gap: 12px;
+      border-bottom: 2px solid #222; z-index: 1000; min-height: 54px;
     }
     .btn-back {
       background: #202020; color: #fff; border: 1px solid #444;
-      padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800;
-      cursor: pointer;
+      padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 800;
+      cursor: pointer; flex-shrink: 0;
     }
     .btn-back:hover { background: #333; color: #ffcc00; border-color: #ffcc00; }
-    .active-ac-title { font-size: 14px; font-weight: 800; color: #ffcc00; }
+    
+    /* TITOLO SU DUE RIGHE PULITO */
+    .header-info {
+      display: flex; flex-direction: column; justify-content: center;
+      min-width: 0; flex: 1;
+    }
+    .header-dz-name {
+      font-size: 14px; font-weight: 900; color: #ffffff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .header-plane-info {
+      font-size: 12px; font-weight: 700; color: #ffcc00; margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
 
-    /* Dashboard Metriche */
     #hud {
       display: grid; grid-template-columns: repeat(4, 1fr);
       gap: 6px; padding: 8px; background: #121212; border-bottom: 2px solid #282828;
@@ -122,10 +127,8 @@
     .c-spd { color: #00ff66; }
     .c-sep { color: #ff3366; }
 
-    /* Mappa */
     #map { flex: 1; width: 100%; background: #050505; }
 
-    /* Barra Inferiore: Pulsante Storico + Cerchietto Flightradar24 */
     .bottom-actions {
       position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
       display: flex; align-items: center; gap: 10px; z-index: 1100;
@@ -137,7 +140,6 @@
     }
     #history-toggle-btn:hover { background: #222; border-color: #00e5ff; }
 
-    /* Cerchietto Flightradar24 */
     #fr24-btn {
       width: 44px; height: 44px; border-radius: 50%;
       background: #181818; border: 2px solid #ffcc00;
@@ -191,7 +193,6 @@
       <div style="padding: 20px; color: #666;">Caricamento dropzone in corso...</div>
     </div>
 
-    <!-- CREDITS IN FONDO -->
     <div class="fleet-footer">
       <div class="footer-credit">Sviluppato da <strong>Tommaso Conti</strong></div>
       <a class="footer-email" href="mailto:tommasoconti98@gmail.com?subject=SkyTrack%20-%20Richiesta%20di%20aggiunta%20aereo%20%2F%20dropzone&body=Ciao%20Tommaso%2C%0A%0Ami%20piacerebbe%20aggiungere%20questo%20aereo%2Fdropzone%20su%20SkyTrack%3A%0A%0A-%20Marche%20dell%27aereo%3A%20%0A-%20Nome%20della%20dropzone%3A%20%0A%0A%2AEntrambi%20i%20campi%20sono%20essenziali%20per%20l%27aggiunta%20sul%20portale.%0A%0AGrazie%21">
@@ -205,8 +206,10 @@
   <div id="detail-screen">
     <div id="top-bar">
       <button class="btn-back" onclick="showFleetScreen()">← DROPZONE</button>
-      <div class="active-ac-title" id="active-ac-title">--</div>
-      <div style="width: 70px;"></div>
+      <div class="header-info">
+        <div class="header-dz-name" id="header-dz-name">--</div>
+        <div class="header-plane-info" id="header-plane-info">--</div>
+      </div>
     </div>
 
     <div id="hud">
@@ -317,24 +320,18 @@
       grid.innerHTML = '';
 
       dropzonesConfig.forEach(dz => {
-        // Recupera aereo attivo e modello da index.json o dropzones.json
-        let activeReg = dz.active_reg || '--';
-        let model = 'Pilatus PC-6';
-        let photo = '';
-
+        let found = null;
         if (masterIndex && masterIndex.dropzones) {
-          const found = masterIndex.dropzones.find(d => d.id === dz.id);
-          if (found) {
-            activeReg = found.active_reg || activeReg;
-            model = found.model || model;
-            photo = found.photo || photo;
-          }
+          found = masterIndex.dropzones.find(d => d.id === dz.id);
         }
 
-        if (!photo && fleetConfig[activeReg]) {
-          photo = fleetConfig[activeReg].photo || '';
-          model = fleetConfig[activeReg].model || model;
-        }
+        // Determina aereo attivo: ultimo volo registrato -> dropzone.json -> index.json
+        let activeReg = (found && found.runs && found.runs.length > 0 && found.runs[0].reg) 
+          ? found.runs[0].reg 
+          : (dz.active_reg || (found && found.active_reg) || '--');
+
+        let model = (fleetConfig[activeReg] && fleetConfig[activeReg].model) || (found && found.model) || 'Pilatus PC-6';
+        let photo = (fleetConfig[activeReg] && fleetConfig[activeReg].photo) || (found && found.photo) || '';
 
         const card = document.createElement('div');
         card.className = 'fleet-card';
@@ -362,11 +359,14 @@
       selectedDz = dz;
       document.getElementById('fleet-screen').style.display = 'none';
       document.getElementById('detail-screen').style.display = 'flex';
-      document.getElementById('active-ac-title').innerText = `${dz.name} - ${activeReg}`;
+      
+      // Header su due righe: Nome Dropzone in bianco, Marche + Modello in giallo
+      document.getElementById('header-dz-name').innerText = dz.name;
+      document.getElementById('header-plane-info').innerText = `${activeReg} • ${model}`;
 
-      // Configura il cerchietto Flightradar24
+      // Configura cerchietto Flightradar24
       const frBtn = document.getElementById('fr24-btn');
-      frBtn.href = activeReg !== '--' ? `https://www.flightradar24.com/data/aircraft/${activeReg.toLowerCase()}` : '#';
+      frBtn.href = (activeReg && activeReg !== '--') ? `https://www.flightradar24.com/data/aircraft/${activeReg.toLowerCase()}` : '#';
 
       initMap();
       map.invalidateSize();

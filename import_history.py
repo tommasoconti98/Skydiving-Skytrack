@@ -246,6 +246,11 @@ def process_all_imports():
                     "title": title, "duration_sec": duration, "heading_deg": avg_track, "speed_kt": avg_speed
                 })
                 dz_entry["runs"].sort(key=lambda x: (x.get("date", ""), x.get("time", "")), reverse=True)
+                # Allinea l aereo attivo all ultimo lancio registrato
+                if dz_entry["runs"]:
+                    dz_entry["active_reg"] = dz_entry["runs"][0]["reg"]
+                    dz_entry["model"] = fleet.get(dz_entry["active_reg"], {}).get("model", dz_entry.get("model", ""))
+                    dz_entry["photo"] = fleet.get(dz_entry["active_reg"], {}).get("photo", dz_entry.get("photo", ""))
 
                 total_runs_imported += 1
                 dur_m, dur_s = divmod(duration, 60)

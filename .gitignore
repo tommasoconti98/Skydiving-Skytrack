@@ -1,2 +1,3 @@
 imports/
 *.csv
+bot_config.json

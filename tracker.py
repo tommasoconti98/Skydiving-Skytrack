@@ -17,7 +17,16 @@ INDEX_PATH = os.path.join(DATA_DIR, "index.json")
 TELEGRAM_USERS_FILE = os.path.join(DATA_DIR, "telegram_users.json")
 
 # ================= TELEGRAM CONFIG =================
-BOT_TOKEN = "9201777349:AAGtvUAgMs9aiTzMUYgfmlXsEhAlmx1tt3M"
+CFG_FILE = os.path.join(REPO_DIR, "bot_config.json")
+BOT_TOKEN = ""
+if os.path.exists(CFG_FILE):
+    try:
+        with open(CFG_FILE, "r") as cf:
+            BOT_TOKEN = json.load(cf).get("bot_token", "")
+    except: pass
+if not BOT_TOKEN:
+    BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # ================= GESTIONE UTENTI TELEGRAM ========
