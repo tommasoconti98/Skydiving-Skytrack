@@ -1734,6 +1734,66 @@
           "speed_kt": 72.3
         }
       ]
+    },
+    {
+      "id": "sardegna",
+      "name": "SkyDive Sardegna",
+      "active_reg": "OK-LON",
+      "model": "Pilatus PC-6",
+      "photo": "https://cdn.jetphotos.com/full/6/905715_1716741467.jpg",
+      "center_lat": 39.400239,
+      "center_lon": 9.140178,
+      "runs": []
+    },
+    {
+      "id": "reggioemilia",
+      "name": "BFU Paracadutismo Reggio Emilia",
+      "active_reg": "D-FRED",
+      "model": "Caravan C208",
+      "photo": "https://cdn.jetphotos.com/full/5/83130_1508861738.jpg",
+      "center_lat": 44.697781,
+      "center_lon": 10.665812,
+      "runs": []
+    },
+    {
+      "id": "molinella",
+      "name": "FlyGang Molinella",
+      "active_reg": "D-FBUZ",
+      "model": "Cessna Caravan C208",
+      "photo": "https://cdn.jetphotos.com/full/6/1367265_1746306656.jpg",
+      "center_lat": 44.598805,
+      "center_lon": 11.656761,
+      "runs": []
+    },
+    {
+      "id": "ravenna",
+      "name": "SkyDive Pull Out Ravenna",
+      "active_reg": "D-EEWY",
+      "model": "Cessna C206",
+      "photo": "https://cdn.jetphotos.com/full/5/535999_1788292834.jpg",
+      "center_lat": 44.364059,
+      "center_lon": 12.22246,
+      "runs": []
+    },
+    {
+      "id": "fano",
+      "name": "SkyDive Fano",
+      "active_reg": "9H-RVM",
+      "model": "Pilatus PC-6",
+      "photo": "https://cdn.jetphotos.com/full/5/1052857_1727217844.jpg",
+      "center_lat": 43.826631,
+      "center_lon": 13.030592,
+      "runs": []
+    },
+    {
+      "id": "maremma",
+      "name": "Maremma Fly",
+      "active_reg": "F-GHEN",
+      "model": "Cessna C206",
+      "photo": "https://cdn.jetphotos.com/full/6/465479_1778616084.jpg",
+      "center_lat": 42.911919,
+      "center_lon": 10.8171,
+      "runs": []
     }
   ],
   "last_updated": "2026-11-09T16:31:08.140100+00:00"

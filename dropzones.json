@@ -33,5 +33,48 @@
     "center_lat": 37.029638,
     "center_lon": 15.244150,
     "active_reg": "S5-CMA"
+  },
+  {
+    "id": "sardegna",
+    "name": "SkyDive Sardegna",
+    "center_lat": 39.400239,
+    "center_lon": 9.140178,
+    "active_reg": "OK-LON"
+  },
+  {
+    "id": "reggioemilia",
+    "name": "BFU Paracadutismo Reggio Emilia",
+    "center_lat": 44.697781,
+    "center_lon": 10.665812,
+    "active_reg": "D-FRED"
+  },
+  {
+    "id": "molinella",
+    "name": "FlyGang Molinella",
+    "center_lat": 44.598805,
+    "center_lon": 11.656761,
+    "active_reg": "D-FBUZ"
+  },
+  {
+    "id": "ravenna",
+    "name": "SkyDive Pull Out Ravenna",
+    "center_lat": 44.364059,
+    "center_lon": 12.222460,
+    "active_reg": "D-EEWY"
+  },
+  {
+    "id": "fano",
+    "name": "SkyDive Fano",
+    "center_lat": 43.826631,
+    "center_lon": 13.030592,
+    "active_reg": "9H-RVM"
+  },
+  {
+    "id": "maremma",
+    "name": "Maremma Fly",
+    "center_lat": 42.911919,
+    "center_lon": 10.817100,
+    "active_reg": "F-GHEN"
   }
 ]
+
