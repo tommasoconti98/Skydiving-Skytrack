@@ -172,18 +172,29 @@ def ensure_master_index(dropzones, fleet):
     with open(INDEX_PATH, "w") as f:
         json.dump(data, f, indent=2)
 
+def update_dropzone_active_reg(dz_id, reg):
+    dzs = load_dropzones()
+    changed = False
+    for d in dzs:
+        if d["id"] == dz_id and d.get("active_reg") != reg:
+            d["active_reg"] = reg
+            changed = True
+            break
+    if changed:
+        save_dropzones(dzs)
+
 def circular_mean_heading(angles_deg):
     x = sum(math.cos(math.radians(a)) for a in angles_deg)
     y = sum(math.sin(math.radians(a)) for a in angles_deg)
     return round(math.degrees(math.atan2(y, x)) % 360)
 
-class DropzoneTracker:
-    def __init__(self, dz, fleet):
+class AircraftDropzoneTracker:
+    def __init__(self, dz, reg, fleet):
         self.dz_id = dz["id"]
         self.dz_name = dz["name"]
         self.center_lat = dz["center_lat"]
         self.center_lon = dz["center_lon"]
-        self.active_reg = dz.get("active_reg", "")
+        self.reg = reg
         self.fleet = fleet
         
         self.state = "IDLE"
@@ -193,21 +204,10 @@ class DropzoneTracker:
         self.max_alt_m = 0
         self.is_flying = False
 
-    def update_active_aircraft(self, reg):
-        if self.active_reg != reg:
-            self.active_reg = reg
-            dzs = load_dropzones()
-            for d in dzs:
-                if d["id"] == self.dz_id:
-                    d["active_reg"] = reg
-                    break
-            save_dropzones(dzs)
-
-    def process_point(self, reg, lat, lon, track, alt_ft, speed_kt, feed_vrt):
+    def process_point(self, lat, lon, track, alt_ft, speed_kt, feed_vrt):
         now = time.time()
         alt_m = int(alt_ft * 0.3048)
         self.last_seen = now
-        self.update_active_aircraft(reg)
 
         calc_v_rate = feed_vrt
         turn_rate = 0.0
@@ -220,14 +220,19 @@ class DropzoneTracker:
                 turn_rate = d_trk / dt
 
         v_rate_fpm = calc_v_rate
-        point = {"time": now, "lat": lat, "lon": lon, "track": track, "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm}
+        point = {
+            "time": now, "lat": lat, "lon": lon, "track": track,
+            "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm
+        }
 
+        # ALERT TELEGRAM: Decollo
         if alt_m > 350 and v_rate_fpm > 400 and not self.is_flying:
             self.is_flying = True
-            model = self.fleet.get(self.active_reg, {}).get("model", "Aereo")
-            msg = f"🛫 *Aereo in volo a {self.dz_name}!*\\n*{self.active_reg}* ({model}) sta salendo a {alt_m}m."
+            update_dropzone_active_reg(self.dz_id, self.reg)
+            model = self.fleet.get(self.reg, {}).get("model", "Aereo")
+            msg = f"🛫 *Aereo in volo a {self.dz_name}!*\n*{self.reg}* ({model}) sta salendo a {alt_m}m."
             broadcast_telegram(self.dz_id, msg)
-            broadcast_telegram(self.active_reg, msg)
+            broadcast_telegram(self.reg, msg)
 
         if self.state == "IDLE":
             if alt_m >= 2800 and -1000 < v_rate_fpm < 500 and turn_rate < 3.5 and 45 <= speed_kt <= 95:
@@ -261,11 +266,12 @@ class DropzoneTracker:
             self.finalize_run()
             self.reset()
         
+        # Timeout 40 minuti: aereo a terra
         if self.is_flying and self.last_seen > 0 and (now - self.last_seen) > 2400:
             self.is_flying = False
-            msg = f"💤 *Tracciamento in pausa a {self.dz_name}*\\nNessun segnale da {self.active_reg} da 40 minuti (Atterrato)."
+            msg = f"💤 *Tracciamento in pausa a {self.dz_name}*\nNessun segnale da {self.reg} da 40 minuti (Atterrato)."
             broadcast_telegram(self.dz_id, msg)
-            broadcast_telegram(self.active_reg, msg)
+            broadcast_telegram(self.reg, msg)
 
     def finalize_run(self):
         run_pts = [p for p in self.buffer if p["v_rate"] > -2000]
@@ -287,31 +293,35 @@ class DropzoneTracker:
         dz_entry = next((d for d in data.get("dropzones", []) if d["id"] == self.dz_id), None)
         run_num = len([r for r in dz_entry.get("runs", []) if r.get("date") == d_str]) + 1 if dz_entry else 1
 
-        model = self.fleet.get(self.active_reg, {}).get("model", "")
-        msg = f"🪂 *Lancio Completato!*\\n📍 *{self.dz_name}* — Decollo #{run_num}\\n"
-        msg += f"✈️ Velivolo: *{self.active_reg}* ({model})\\n\\n"
-        msg += f"📏 Quota: *{exit_alt}m*\\n"
+        update_dropzone_active_reg(self.dz_id, self.reg)
+
+        # TELEGRAM: Riassunto Lancio
+        model = self.fleet.get(self.reg, {}).get("model", "")
+        msg = f"🪂 *Lancio Completato!*\n📍 *{self.dz_name}* — Decollo #{run_num}\n"
+        msg += f"✈️ Velivolo: *{self.reg}* ({model})\n\n"
+        msg += f"📏 Quota: *{exit_alt}m*\n"
         msg += f"🧭 Asse: *{avg_track}°*\\n"
-        msg += f"💨 Ground Speed: *{avg_speed} kt*\\n"
+        msg += f"💨 Ground Speed: *{avg_speed} kt*\n"
         msg += f"⏱ Separazione 300m: *{sep_300m} s*"
         broadcast_telegram(self.dz_id, msg)
-        broadcast_telegram(self.active_reg, msg)
+        broadcast_telegram(self.reg, msg)
 
+        # Salvataggio file del lancio
         dz_dir = os.path.join(RUNS_DIR, self.dz_id)
         os.makedirs(dz_dir, exist_ok=True)
         f_name = f"{d_str}_run_{run_num:02d}.json"
         
         run_data = {
             "dropzone_id": self.dz_id, "dropzone": self.dz_name,
-            "reg": self.active_reg, "model": model,
+            "reg": self.reg, "model": model,
             "date": d_str, "time": t_str,
             "stats": {"altitude_m": exit_alt, "heading_deg": avg_track, "ground_speed_kt": avg_speed, "separation_sec": sep_300m, "duration_sec": duration},
             "points": [{"lat": p["lat"], "lon": p["lon"]} for p in run_pts]
         }
         with open(os.path.join(dz_dir, f_name), "w") as f: json.dump(run_data, f)
         
-        update_master_index(self.dz_id, self.active_reg, model, self.fleet.get(self.active_reg, {}).get("photo", ""), f_name, d_str, t_str, duration, avg_track, avg_speed, run_num)
-        push_to_github(f"Lancio {self.dz_name} #{run_num} ({self.active_reg})")
+        update_master_index(self.dz_id, self.reg, model, self.fleet.get(self.reg, {}).get("photo", ""), f_name, d_str, t_str, duration, avg_track, avg_speed, run_num)
+        push_to_github(f"Lancio {self.dz_name} #{run_num} ({self.reg})")
 
     def reset(self):
         self.state = "IDLE"
@@ -348,7 +358,8 @@ def main():
     fleet = load_fleet()
     ensure_master_index(dropzones, fleet)
     
-    trackers = {dz["id"]: DropzoneTracker(dz, fleet) for dz in dropzones}
+    # Mappa delle istanze: (dz_id, plane_reg) -> AircraftDropzoneTracker
+    aircraft_trackers = {}
     daily_summary_sent = False
     last_heartbeat = time.time()
     
@@ -358,10 +369,14 @@ def main():
         now_time = time.time()
         dt_now = datetime.datetime.now()
         
+        # Heartbeat ogni 30 minuti con elenco aerei in volo
         if (now_time - last_heartbeat) >= 1800:
-            print(f"💓 [HEARTBEAT] Monitor attivo su {len(trackers)} dropzone | Bot Telegram online.")
+            flying = [f"{t.reg}@{t.dz_name}" for t in aircraft_trackers.values() if t.is_flying]
+            fly_str = f" | In volo: {flying}" if flying else " | Nessun aereo in volo"
+            print(f"💓 [HEARTBEAT] Monitor attivo su {len(dropzones)} dropzone{fly_str} | Bot Telegram online.")
             last_heartbeat = now_time
 
+        # Riassunto Giornata alle 20:30 locali
         if dt_now.hour == 20 and dt_now.minute == 30:
             if not daily_summary_sent:
                 today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
@@ -369,28 +384,40 @@ def main():
                 for dz in data.get("dropzones", []):
                     today_runs = [r for r in dz.get("runs", []) if r["date"] == today_str]
                     if today_runs:
-                        msg = f"🌅 *Riassunto Giornata @ {dz['name']}*\\nOggi completati *{len(today_runs)} decolli* registrati (Velivolo: {dz.get('active_reg')})."
+                        msg = f"🌅 *Riassunto Giornata @ {dz['name']}*\nOggi completati *{len(today_runs)} decolli* registrati (Ultimo velivolo: {dz.get('active_reg')})."
                         broadcast_telegram(dz["id"], msg)
                 daily_summary_sent = True
         else:
             daily_summary_sent = False
 
-        for dz_id, tracker in trackers.items():
-            url = f"https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds={tracker.center_lat+0.25},{tracker.center_lat-0.25},{tracker.center_lon-0.25},{tracker.center_lon+0.25}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=0&air=1&vehicles=0&estimated=1"
+        # Scansione radar concorrente di ogni dropzone
+        for dz in dropzones:
+            dz_id = dz["id"]
+            c_lat, c_lon = dz["center_lat"], dz["center_lon"]
+            url = f"https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds={c_lat+0.25},{c_lat-0.25},{c_lon-0.25},{c_lon+0.25}&faa=1&satellite=1&mlat=1&flarm=1&adsb=1&gnd=0&air=1&vehicles=0&estimated=1"
             try:
                 r = requests.get(url, headers=HEADERS, timeout=5)
                 if r.status_code == 200:
                     feed = r.json()
-                    found = False
+                    seen_regs_in_dz = set()
                     for k, val in feed.items():
                         if k in ["full_count", "version"]: continue
                         plane_reg = val[9] if len(val) > 9 else ""
                         if plane_reg in fleet:
-                            found = True
-                            tracker.process_point(plane_reg, val[1], val[2], val[3] or 0, val[4] or 0, val[5] or 0, val[15] or 0)
-                    if not found:
-                        tracker.check_signal_timeout()
-            except: pass
+                            seen_regs_in_dz.add(plane_reg)
+                            tracker_key = (dz_id, plane_reg)
+                            if tracker_key not in aircraft_trackers:
+                                aircraft_trackers[tracker_key] = AircraftDropzoneTracker(dz, plane_reg, fleet)
+                            tracker = aircraft_trackers[tracker_key]
+                            tracker.process_point(val[1], val[2], val[3] or 0, val[4] or 0, val[5] or 0, val[15] or 0)
+                    
+                    # Notifica atterraggio/assenza segnale per aerei di questa DZ non rilevati
+                    for (d_id, p_reg), tracker in list(aircraft_trackers.items()):
+                        if d_id == dz_id and p_reg not in seen_regs_in_dz:
+                            tracker.check_signal_timeout()
+            except Exception:
+                pass
+
         time.sleep(6)
 
 if __name__ == "__main__":
