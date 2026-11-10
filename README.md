@@ -33,6 +33,7 @@ Il sistema include un bot Telegram ufficiale per ricevere aggiornamenti istantan
 * `/start` — Avvia la chat con il bot.
 * `/stato` — Controlla lo stato operativo del monitoraggio radar.
 * `/lista` — Mostra tutte le dropzone monitorate, il velivolo attualmente attivo e i comandi di iscrizione rapida.
+* `/stop` — Disattiva la ricezione delle notifiche relativa alla drop/aereo
 * `/nomedrop` — Iscriviti alle notifiche per quella determinata drop (es /salerno).
 * `/registrazione` — Iscriviti alle notifiche per quel determinato aereo (es /DFGMG).
 
