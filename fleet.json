@@ -14,5 +14,40 @@
   "OK-AFF": {
     "model": "Pilatus PC-6",
     "photo": "https://cdn.jetphotos.com/full/6/2508861_1754499761.jpg"
+  },
+  "D-FWHT": {
+    "model": "Pilatus PC-6",
+    "hex": "3D8431",
+    "photo": "https://cdn.jetphotos.com/full/5/91258_1627306926.jpg"
+  },
+  "9H-RVM": {
+    "model": "Pilatus PC-6",
+    "photo": "https://cdn.jetphotos.com/full/5/1052857_1727217844.jpg"
+  },
+  "D-FRED": {
+    "model": "Caravan C208",
+    "photo": "https://cdn.jetphotos.com/full/5/83130_1508861738.jpg"
+  },
+  "D-FBUZ": {
+    "model": "Cessna Caravan C208",
+    "photo": "https://cdn.jetphotos.com/full/6/1367265_1746306656.jpg"
+  },
+  "F-GHEN": {
+    "model": "Cessna C206",
+    "hex": "391C8D",
+    "photo": "https://cdn.jetphotos.com/full/6/465479_1778616084.jpg"
+  },
+  "D-EPJR": {
+    "model": "Cessna C207",
+    "hex": "3D2D3F",
+    "photo": "https://cdn.jetphotos.com/full/5/95287_1576915732.jpg"
+  },
+  "D-FPTF": {
+    "model": "Pilatus PC-6",
+    "photo": "https://cdn.jetphotos.com/full/5/2974844_1756830367.jpg"
+  },
+  "PH-JBR": {
+    "model": "Cessna Caravan C208",
+    "photo": "https://cdn.jetphotos.com/full/5/51265_1608188197.jpg"
   }
 }

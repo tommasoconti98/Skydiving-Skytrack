@@ -61,21 +61,31 @@ def broadcast_telegram(target_key, message):
 if bot:
     @bot.message_handler(commands=['start'])
     def handle_start(message):
-        bot.reply_to(message, "✈️ *Benvenuto su SkyTrack Bot!*\nUsa /lista per scegliere quale Dropzone seguire.", parse_mode="Markdown")
+        bot.reply_to(message, "✈️ *Benvenuto su SkyTrack Bot!*\nUsa /lista per scegliere quale Dropzone o quale Aereo seguire.", parse_mode="Markdown")
 
     @bot.message_handler(commands=['stato'])
     def handle_stato(message):
         dzs = load_dropzones()
-        bot.reply_to(message, f"🟢 *Sistema Online*\nIl radar sta monitorando {len(dzs)} dropzone.", parse_mode="Markdown")
+        fleet = load_fleet()
+        bot.reply_to(message, f"🟢 *Sistema Online*\nIl radar sta monitorando {len(dzs)} dropzone e una flotta di {len(fleet)} velivoli.", parse_mode="Markdown")
 
-    @bot.message_handler(commands=['lista'])
+    @bot.message_handler(commands=['lista', 'aerei', 'flotta'])
     def handle_lista(message):
         dzs = load_dropzones()
-        msg = "📋 *Dropzone monitorate:*\n\n"
+        fleet = load_fleet()
+        
+        msg = "📍 *DROPZONE MONITORATE:*\n"
         for dz in dzs:
             clean_cmd = dz["id"].upper()
-            msg += f"• *{dz['name']}*\n  Velivolo attuale: `{dz.get('active_reg', '--')}`\n  👉 Segui: /{clean_cmd}\n\n"
-        msg += "Clicca sul comando della dropzone per ricevere le sue notifiche.\nUsa /stop per disattivarle in qualsiasi momento."
+            msg += f"• *{dz['name']}*\n  👉 Segui campo: /{clean_cmd}\n"
+        
+        msg += "\n✈️ *VELIVOLI MONITORATI:*\n"
+        for reg, info in fleet.items():
+            clean_reg = reg.replace("-", "").upper()
+            model = info.get("model", "Aereo")
+            msg += f"• *{reg}* ({model})\n  👉 Segui aereo: /{clean_reg}\n"
+        
+        msg += "\n_Clicca su un comando per attivare le notifiche._\n_Usa /stop per disattivarle in qualsiasi momento._"
         bot.reply_to(message, msg, parse_mode="Markdown")
 
     @bot.message_handler(commands=['stop', 'annulla', 'silenzia'])
@@ -91,28 +101,32 @@ if bot:
 
     @bot.message_handler(func=lambda msg: msg.text.startswith('/'))
     def handle_custom_command(message):
-        cmd = message.text[1:].upper().replace("-", "")
+        raw_cmd = message.text[1:].split("@")[0].upper()
+        cmd = raw_cmd.replace("-", "")
         dzs = load_dropzones()
         fleet = load_fleet()
         
+        # 1. Match Dropzone (es. /SICILIA, /SALERNO, /LUCCA, /NETTUNO, /ORBETELLO)
         for dz in dzs:
             if dz["id"].upper() == cmd:
                 users = load_telegram_users()
                 users[str(message.chat.id)] = dz["id"]
                 save_telegram_users(users)
-                bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai le notifiche per *{dz['name']}* (Velivolo: `{dz.get('active_reg', '--')}`).", parse_mode="Markdown")
+                bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai le notifiche per *{dz['name']}* (Velivolo attivo: `{dz.get('active_reg', '--')}`).", parse_mode="Markdown")
                 return
 
+        # 2. Match SOLO Marche Aereo (es. /DFWHT, /DFSKY, /DFGMG, /DFRED, /DFBUZ, /FGHEN, /DEPJR, etc.)
         for reg in fleet.keys():
             if reg.replace("-", "").upper() == cmd:
                 users = load_telegram_users()
                 users[str(message.chat.id)] = reg
                 save_telegram_users(users)
-                bot.reply_to(message, f"✅ Iscrizione confermata per il velivolo *{reg}*.", parse_mode="Markdown")
+                model = fleet[reg].get("model", "Aereo")
+                bot.reply_to(message, f"✅ Iscrizione confermata per il velivolo *{reg}* ({model}).", parse_mode="Markdown")
                 return
 
-        if cmd not in ["START", "STATO", "LISTA", "STOP", "ANNULLA", "SILENZIA"]:
-            bot.reply_to(message, "Comando non riconosciuto. Usa /lista per vedere l'elenco.")
+        if cmd not in ["START", "STATO", "LISTA", "AEREI", "FLOTTA", "STOP", "ANNULLA", "SILENZIA"]:
+            bot.reply_to(message, "Comando non riconosciuto. Usa /lista per visualizzare l'elenco completo.")
 
 def run_bot():
     if not bot:
@@ -204,6 +218,33 @@ class AircraftDropzoneTracker:
         self.max_alt_m = 0
         self.is_flying = False
 
+        # Profilo di volo dinamico in base al modello di aeromobile
+        model_str = self.fleet.get(self.reg, {}).get("model", "").lower()
+        if "c208" in model_str or "caravan" in model_str:
+            # Cessna Caravan C208: turboprop veloce in run-in
+            self.min_alt_m = 2700
+            self.min_spd_kt = 50
+            self.max_spd_kt = 110
+            self.dive_vs_fpm = -2200
+            self.dive_combo_vs = -1600
+            self.dive_combo_spd = 105
+        elif "206" in model_str or "207" in model_str:
+            # Cessna C206 / C207: aerei a pistoni (quote da 2400m+ e discese graduali salva-motore)
+            self.min_alt_m = 2400
+            self.min_spd_kt = 45
+            self.max_spd_kt = 90
+            self.dive_vs_fpm = -1600
+            self.dive_combo_vs = -1300
+            self.dive_combo_spd = 85
+        else:
+            # Pilatus PC-6 e default: STOL a turbina, quote 2700m+, picchiata ripida
+            self.min_alt_m = 2700
+            self.min_spd_kt = 45
+            self.max_spd_kt = 95
+            self.dive_vs_fpm = -2400
+            self.dive_combo_vs = -1800
+            self.dive_combo_spd = 95
+
     def process_point(self, lat, lon, track, alt_ft, speed_kt, feed_vrt):
         now = time.time()
         alt_m = int(alt_ft * 0.3048)
@@ -234,8 +275,9 @@ class AircraftDropzoneTracker:
             broadcast_telegram(self.dz_id, msg)
             broadcast_telegram(self.reg, msg)
 
+        # Riconoscimento Run-In
         if self.state == "IDLE":
-            if alt_m >= 2800 and -1000 < v_rate_fpm < 500 and turn_rate < 3.5 and 45 <= speed_kt <= 95:
+            if alt_m >= self.min_alt_m and -1000 < v_rate_fpm < 500 and turn_rate < 3.5 and self.min_spd_kt <= speed_kt <= self.max_spd_kt:
                 self.state = "RUN_IN"
                 self.max_alt_m = alt_m
                 self.buffer = [point]
@@ -243,12 +285,18 @@ class AircraftDropzoneTracker:
         elif self.state == "RUN_IN":
             if alt_m > self.max_alt_m: self.max_alt_m = alt_m
 
+            # Se l'aereo continua a salire sopra la quota di inizio run, era solo un livellamento provvisorio
             if alt_m > (self.buffer[0]["alt_m"] + 180):
                 self.reset()
                 self.last_point = point
                 return
 
-            is_dive = (v_rate_fpm <= -2500) or (v_rate_fpm <= -1800 and (speed_kt >= 95 or turn_rate > 4.0)) or (alt_m < (self.max_alt_m - 350)) or (alt_m < 2600)
+            # Riconoscimento picchiata post-lancio
+            is_dive = (v_rate_fpm <= self.dive_vs_fpm) or \
+                      (v_rate_fpm <= self.dive_combo_vs and (speed_kt >= self.dive_combo_spd or turn_rate > 4.0)) or \
+                      (alt_m < (self.max_alt_m - 350)) or \
+                      (alt_m < (self.min_alt_m - 200))
+
             if is_dive:
                 self.finalize_run()
                 self.reset()
@@ -274,7 +322,8 @@ class AircraftDropzoneTracker:
             broadcast_telegram(self.reg, msg)
 
     def finalize_run(self):
-        run_pts = [p for p in self.buffer if p["v_rate"] > -2000]
+        # Esclude i punti già in picchiata ripida
+        run_pts = [p for p in self.buffer if p["v_rate"] > self.dive_vs_fpm]
         if len(run_pts) < 4: run_pts = self.buffer
         if len(run_pts) < 4: return
         
@@ -300,7 +349,7 @@ class AircraftDropzoneTracker:
         msg = f"🪂 *Lancio Completato!*\n📍 *{self.dz_name}* — Decollo #{run_num}\n"
         msg += f"✈️ Velivolo: *{self.reg}* ({model})\n\n"
         msg += f"📏 Quota: *{exit_alt}m*\n"
-        msg += f"🧭 Asse: *{avg_track}°*\\n"
+        msg += f"🧭 Asse: *{avg_track}°*\n"
         msg += f"💨 Ground Speed: *{avg_speed} kt*\n"
         msg += f"⏱ Separazione 300m: *{sep_300m} s*"
         broadcast_telegram(self.dz_id, msg)
@@ -358,7 +407,6 @@ def main():
     fleet = load_fleet()
     ensure_master_index(dropzones, fleet)
     
-    # Mappa delle istanze: (dz_id, plane_reg) -> AircraftDropzoneTracker
     aircraft_trackers = {}
     daily_summary_sent = False
     last_heartbeat = time.time()
@@ -390,7 +438,7 @@ def main():
         else:
             daily_summary_sent = False
 
-        # Scansione radar concorrente di ogni dropzone
+        # Scansione radar di ogni dropzone
         for dz in dropzones:
             dz_id = dz["id"]
             c_lat, c_lon = dz["center_lat"], dz["center_lon"]
@@ -402,16 +450,28 @@ def main():
                     seen_regs_in_dz = set()
                     for k, val in feed.items():
                         if k in ["full_count", "version"]: continue
-                        plane_reg = val[9] if len(val) > 9 else ""
-                        if plane_reg in fleet:
-                            seen_regs_in_dz.add(plane_reg)
-                            tracker_key = (dz_id, plane_reg)
+                        
+                        raw_hex = str(val[0]).strip().upper() if len(val) > 0 else ""
+                        raw_reg = val[9].strip() if len(val) > 9 and val[9] else ""
+                        
+                        # Risoluzione interna: prima per marca, poi per esadecimale ICAO (se presente)
+                        matched_reg = None
+                        if raw_reg in fleet:
+                            matched_reg = raw_reg
+                        elif raw_hex:
+                            for reg_key, info in fleet.items():
+                                if info.get("hex", "").strip().upper() == raw_hex:
+                                    matched_reg = reg_key
+                                    break
+
+                        if matched_reg:
+                            seen_regs_in_dz.add(matched_reg)
+                            tracker_key = (dz_id, matched_reg)
                             if tracker_key not in aircraft_trackers:
-                                aircraft_trackers[tracker_key] = AircraftDropzoneTracker(dz, plane_reg, fleet)
+                                aircraft_trackers[tracker_key] = AircraftDropzoneTracker(dz, matched_reg, fleet)
                             tracker = aircraft_trackers[tracker_key]
                             tracker.process_point(val[1], val[2], val[3] or 0, val[4] or 0, val[5] or 0, val[15] or 0)
                     
-                    # Notifica atterraggio/assenza segnale per aerei di questa DZ non rilevati
                     for (d_id, p_reg), tracker in list(aircraft_trackers.items()):
                         if d_id == dz_id and p_reg not in seen_regs_in_dz:
                             tracker.check_signal_timeout()
