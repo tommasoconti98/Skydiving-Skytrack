@@ -33,13 +33,8 @@ Il sistema include un bot Telegram ufficiale per ricevere aggiornamenti istantan
 * `/start` — Avvia la chat con il bot.
 * `/stato` — Controlla lo stato operativo del monitoraggio radar.
 * `/lista` — Mostra tutte le dropzone monitorate, il velivolo attualmente attivo e i comandi di iscrizione rapida.
-* `/salerno` — Iscriviti alle notifiche per **SkyDive Salerno**.
-* `/lucca` — Iscriviti alle notifiche per **SkyDive Lucca**.
-* `/nettuno` — Iscriviti alle notifiche per **CrazyFly Nettuno**.
-* `/orbetello` — Iscriviti alle notifiche per **SkyDive Costa D'Argento**.
-* `/sicilia` — Iscriviti alle notifiche per **SkyDive Sicilia**.
-
-*(È inoltre possibile seguire specifici velivoli digitandone la registrazione, ad es. `/DFSKY`, `/DFGMG`, `/S5CMA` o `/OKAFF`)*.
+* `/nomedrop` — Iscriviti alle notifiche per quella determinata drop (es /salerno).
+* `/registrazione` — Iscriviti alle notifiche per quel determinato aereo (es /DFGMG).
 
 ## ⚙️ Come funziona (Dietro le quinte)
 
