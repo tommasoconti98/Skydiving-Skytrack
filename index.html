@@ -94,7 +94,6 @@
     }
     .btn-back:hover { background: #333; color: #ffcc00; border-color: #ffcc00; }
     
-    /* TITOLO SU DUE RIGHE PULITO */
     .header-info {
       display: flex; flex-direction: column; justify-content: center;
       min-width: 0; flex: 1;
@@ -333,12 +332,27 @@
         let model = (fleetConfig[activeReg] && fleetConfig[activeReg].model) || (found && found.model) || 'Pilatus PC-6';
         let photo = (fleetConfig[activeReg] && fleetConfig[activeReg].photo) || (found && found.photo) || '';
 
+        // Controllo attività odierna per LED verde
+        let isLiveToday = false;
+        if (found && found.runs && found.runs.length > 0) {
+          const tz = getTimezoneFromCoords(dz.center_lat, dz.center_lon);
+          const now = new Date();
+          const todayStr = now.toLocaleDateString('sv-SE', { timeZone: tz });
+          const lastRunStr = formatLocalDate(found.runs[0].date, found.runs[0].time, tz);
+          if (todayStr === lastRunStr) {
+            isLiveToday = true;
+          }
+        }
+
         const card = document.createElement('div');
         card.className = 'fleet-card';
         card.onclick = () => openDropzone(dz, activeReg, model);
         card.innerHTML = `
           <div class="card-left">
-            <div class="card-dz-title">${dz.name}</div>
+            <div class="card-dz-title">
+              ${dz.name}
+              ${isLiveToday ? '<span style="font-size:12px; margin-left:6px;" title="Attività registrata oggi">🟢</span>' : ''}
+            </div>
             <div class="card-reg-sub">${activeReg}</div>
             <div class="card-model">${model}</div>
           </div>
@@ -360,11 +374,9 @@
       document.getElementById('fleet-screen').style.display = 'none';
       document.getElementById('detail-screen').style.display = 'flex';
       
-      // Header su due righe: Nome Dropzone in bianco, Marche + Modello in giallo
       document.getElementById('header-dz-name').innerText = dz.name;
       document.getElementById('header-plane-info').innerText = `${activeReg} • ${model}`;
 
-      // Configura cerchietto Flightradar24
       const frBtn = document.getElementById('fr24-btn');
       frBtn.href = (activeReg && activeReg !== '--') ? `https://www.flightradar24.com/data/aircraft/${activeReg.toLowerCase()}` : '#';
 
