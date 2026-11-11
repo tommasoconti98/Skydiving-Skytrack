@@ -106,7 +106,6 @@ if bot:
         dzs = load_dropzones()
         fleet = load_fleet()
         
-        # 1. Match Dropzone (es. /SICILIA, /SALERNO, /LUCCA, /NETTUNO, /ORBETELLO)
         for dz in dzs:
             if dz["id"].upper() == cmd:
                 users = load_telegram_users()
@@ -115,7 +114,6 @@ if bot:
                 bot.reply_to(message, f"✅ Iscrizione confermata!\nRiceverai le notifiche per *{dz['name']}* (Velivolo attivo: `{dz.get('active_reg', '--')}`).", parse_mode="Markdown")
                 return
 
-        # 2. Match SOLO Marche Aereo (es. /DFWHT, /DFSKY, /DFGMG, /DFRED, /DFBUZ, /FGHEN, /DEPJR, etc.)
         for reg in fleet.keys():
             if reg.replace("-", "").upper() == cmd:
                 users = load_telegram_users()
@@ -217,11 +215,10 @@ class AircraftDropzoneTracker:
         self.last_point = None
         self.max_alt_m = 0
         self.is_flying = False
+        self.paused_sent = False
 
-        # Profilo di volo dinamico in base al modello di aeromobile
         model_str = self.fleet.get(self.reg, {}).get("model", "").lower()
         if "c208" in model_str or "caravan" in model_str:
-            # Cessna Caravan C208: turboprop veloce in run-in
             self.min_alt_m = 2700
             self.min_spd_kt = 50
             self.max_spd_kt = 110
@@ -229,7 +226,6 @@ class AircraftDropzoneTracker:
             self.dive_combo_vs = -1600
             self.dive_combo_spd = 105
         elif "206" in model_str or "207" in model_str:
-            # Cessna C206 / C207: aerei a pistoni (quote da 2400m+ e discese graduali salva-motore)
             self.min_alt_m = 2400
             self.min_spd_kt = 45
             self.max_spd_kt = 90
@@ -237,7 +233,6 @@ class AircraftDropzoneTracker:
             self.dive_combo_vs = -1300
             self.dive_combo_spd = 85
         else:
-            # Pilatus PC-6 e default: STOL a turbina, quote 2700m+, picchiata ripida
             self.min_alt_m = 2700
             self.min_spd_kt = 45
             self.max_spd_kt = 95
@@ -266,16 +261,21 @@ class AircraftDropzoneTracker:
             "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm
         }
 
-        # ALERT TELEGRAM: Decollo
+        # 1. ALERT TELEGRAM: Decollo (scatta ad OGNI rotazione)
         if alt_m > 350 and v_rate_fpm > 400 and not self.is_flying:
             self.is_flying = True
+            self.paused_sent = False
             update_dropzone_active_reg(self.dz_id, self.reg)
             model = self.fleet.get(self.reg, {}).get("model", "Aereo")
             msg = f"🛫 *Aereo in volo a {self.dz_name}!*\n*{self.reg}* ({model}) sta salendo a {alt_m}m."
             broadcast_telegram(self.dz_id, msg)
             broadcast_telegram(self.reg, msg)
 
-        # Riconoscimento Run-In
+        # 2. Reset atterraggio (quota bassa post-discesa, pronto per il prossimo decollo)
+        if self.is_flying and self.state == "IDLE" and alt_m < 400 and v_rate_fpm < 300:
+            self.is_flying = False
+
+        # 3. Riconoscimento Run-In
         if self.state == "IDLE":
             if alt_m >= self.min_alt_m and -1000 < v_rate_fpm < 500 and turn_rate < 3.5 and self.min_spd_kt <= speed_kt <= self.max_spd_kt:
                 self.state = "RUN_IN"
@@ -285,13 +285,11 @@ class AircraftDropzoneTracker:
         elif self.state == "RUN_IN":
             if alt_m > self.max_alt_m: self.max_alt_m = alt_m
 
-            # Se l'aereo continua a salire sopra la quota di inizio run, era solo un livellamento provvisorio
             if alt_m > (self.buffer[0]["alt_m"] + 180):
                 self.reset()
                 self.last_point = point
                 return
 
-            # Riconoscimento picchiata post-lancio
             is_dive = (v_rate_fpm <= self.dive_vs_fpm) or \
                       (v_rate_fpm <= self.dive_combo_vs and (speed_kt >= self.dive_combo_spd or turn_rate > 4.0)) or \
                       (alt_m < (self.max_alt_m - 350)) or \
@@ -314,15 +312,20 @@ class AircraftDropzoneTracker:
             self.finalize_run()
             self.reset()
         
-        # Timeout 40 minuti: aereo a terra
-        if self.is_flying and self.last_seen > 0 and (now - self.last_seen) > 2400:
+        # Sosta a terra tra le rotazioni (> 5 minuti senza segnale radar)
+        # Resetta is_flying così al prossimo decollo parte l'avviso di salita
+        if self.is_flying and self.state == "IDLE" and self.last_seen > 0 and (now - self.last_seen) > 300:
+            self.is_flying = False
+
+        # Pausa lunga / Fine giornata (> 40 minuti di inattività)
+        if not self.paused_sent and self.last_seen > 0 and (now - self.last_seen) > 2400:
+            self.paused_sent = True
             self.is_flying = False
             msg = f"💤 *Tracciamento in pausa a {self.dz_name}*\nNessun segnale da {self.reg} da 40 minuti (Atterrato)."
             broadcast_telegram(self.dz_id, msg)
             broadcast_telegram(self.reg, msg)
 
     def finalize_run(self):
-        # Esclude i punti già in picchiata ripida
         run_pts = [p for p in self.buffer if p["v_rate"] > self.dive_vs_fpm]
         if len(run_pts) < 4: run_pts = self.buffer
         if len(run_pts) < 4: return
@@ -344,7 +347,6 @@ class AircraftDropzoneTracker:
 
         update_dropzone_active_reg(self.dz_id, self.reg)
 
-        # TELEGRAM: Riassunto Lancio
         model = self.fleet.get(self.reg, {}).get("model", "")
         msg = f"🪂 *Lancio Completato!*\n📍 *{self.dz_name}* — Decollo #{run_num}\n"
         msg += f"✈️ Velivolo: *{self.reg}* ({model})\n\n"
@@ -355,7 +357,6 @@ class AircraftDropzoneTracker:
         broadcast_telegram(self.dz_id, msg)
         broadcast_telegram(self.reg, msg)
 
-        # Salvataggio file del lancio
         dz_dir = os.path.join(RUNS_DIR, self.dz_id)
         os.makedirs(dz_dir, exist_ok=True)
         f_name = f"{d_str}_run_{run_num:02d}.json"
@@ -419,14 +420,12 @@ def main():
         now_time = time.time()
         dt_now = datetime.datetime.now()
         
-        # Heartbeat ogni 30 minuti con elenco aerei in volo
         if (now_time - last_heartbeat) >= 1800:
             flying = [f"{t.reg}@{t.dz_name}" for t in aircraft_trackers.values() if t.is_flying]
             fly_str = f" | In volo: {flying}" if flying else " | Nessun aereo in volo"
             print(f"💓 [HEARTBEAT] Monitor attivo su {len(dropzones)} dropzone{fly_str} | Bot Telegram online.")
             last_heartbeat = now_time
 
-        # Riassunto Giornata alle 20:30 locali
         if dt_now.hour == 20 and dt_now.minute == 30:
             if not daily_summary_sent:
                 today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
@@ -440,7 +439,6 @@ def main():
         else:
             daily_summary_sent = False
 
-        # Scansione radar di ogni dropzone
         for dz in dropzones:
             dz_id = dz["id"]
             c_lat, c_lon = dz["center_lat"], dz["center_lon"]
@@ -456,7 +454,6 @@ def main():
                         raw_hex = str(val[0]).strip().upper() if len(val) > 0 else ""
                         raw_reg = val[9].strip() if len(val) > 9 and val[9] else ""
                         
-                        # Risoluzione interna: prima per marca, poi per esadecimale ICAO (se presente)
                         matched_reg = None
                         if raw_reg in fleet:
                             matched_reg = raw_reg
