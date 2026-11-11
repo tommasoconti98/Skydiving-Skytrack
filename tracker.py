@@ -397,8 +397,10 @@ def push_to_github(msg):
     try:
         subprocess.run(["git", "-C", REPO_DIR, "add", "."], check=True)
         subprocess.run(["git", "-C", REPO_DIR, "commit", "-m", msg], check=True)
+        subprocess.run(["git", "-C", REPO_DIR, "pull", "--rebase", "origin", "main"], check=False)
         subprocess.run(["git", "-C", REPO_DIR, "push"], check=True)
-    except: pass
+    except Exception as e:
+        print(f"Errore push GitHub: {e}")
 
 def main():
     threading.Thread(target=run_bot, daemon=True).start()
