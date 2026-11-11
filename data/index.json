@@ -1783,7 +1783,18 @@
       "photo": "https://cdn.jetphotos.com/full/5/1052857_1727217844.jpg",
       "center_lat": 43.826631,
       "center_lon": 13.030592,
-      "runs": []
+      "runs": [
+        {
+          "file": "fano/2026-11-11_run_01.json",
+          "reg": "9H-RVM",
+          "date": "2026-11-11",
+          "time": "10:44",
+          "title": "Decollo #1",
+          "duration_sec": 50,
+          "heading_deg": 236,
+          "speed_kt": 72.9
+        }
+      ]
     },
     {
       "id": "maremma",
@@ -1796,5 +1807,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-09T16:31:08.140100+00:00"
+  "last_updated": "2026-11-11T10:44:41.483308+00:00"
 }
