@@ -29,8 +29,29 @@
     .fleet-header {
       padding: 24px 18px 16px; background: #121212; border-bottom: 1px solid #222;
     }
+    .fleet-header-inner {
+      max-width: 650px; margin: 0 auto; width: 100%;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    .fleet-header-text { min-width: 0; flex: 1; }
     .fleet-title { font-size: 20px; font-weight: 900; color: #ffcc00; letter-spacing: 1px; }
     .fleet-subtitle { font-size: 12px; color: #888; margin-top: 4px; font-weight: 500; }
+
+    .tg-bot-btn {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: #181818; border: 2px solid #29b6f6;
+      display: flex; align-items: center; justify-content: center;
+      color: #29b6f6; text-decoration: none; cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    .tg-bot-btn:hover, .tg-bot-btn:active {
+      background: #29b6f6; color: #080808; transform: scale(0.95);
+    }
+    .tg-bot-btn svg {
+      width: 20px; height: 20px; fill: currentColor;
+      transform: translateX(-1px);
+    }
 
     .fleet-grid {
       padding: 16px; display: flex; flex-direction: column; gap: 12px; max-width: 650px; margin: 0 auto; width: 100%;
@@ -184,8 +205,17 @@
   <!-- SCHERMATA 1: LISTA DROPZONE -->
   <div id="fleet-screen">
     <div class="fleet-header">
-      <div class="fleet-title">✈ SKYTRACK DROP-LOG</div>
-      <div class="fleet-subtitle">Seleziona una dropzone per visualizzare i lanci</div>
+      <div class="fleet-header-inner">
+        <div class="fleet-header-text">
+          <div class="fleet-title">✈ SKYTRACK DROP-LOG</div>
+          <div class="fleet-subtitle">Seleziona una dropzone per visualizzare i lanci</div>
+        </div>
+        <a class="tg-bot-btn" href="https://t.me/SkyTrack_Monitor_bot" target="_blank" rel="noopener noreferrer" title="Notifiche live su Telegram">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.434z"/>
+          </svg>
+        </a>
+      </div>
     </div>
     
     <div class="fleet-grid" id="fleet-grid">
