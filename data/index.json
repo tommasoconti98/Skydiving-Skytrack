@@ -1946,6 +1946,16 @@
       "center_lon": 10.665812,
       "runs": [
         {
+          "file": "reggioemilia/2026-11-14_run_08.json",
+          "reg": "D-FRED",
+          "date": "2026-11-14",
+          "time": "13:33",
+          "title": "Decollo #8",
+          "duration_sec": 102,
+          "heading_deg": 113,
+          "speed_kt": 84.4
+        },
+        {
           "file": "reggioemilia/2026-11-14_run_07.json",
           "reg": "D-FRED",
           "date": "2026-11-14",
@@ -2229,5 +2239,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-14T13:15:08.957006+00:00"
+  "last_updated": "2026-11-14T13:33:48.842598+00:00"
 }
