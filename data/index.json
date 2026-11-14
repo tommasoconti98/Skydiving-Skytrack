@@ -1783,7 +1783,18 @@
       "photo": "https://cdn.jetphotos.com/full/6/905715_1716741467.jpg",
       "center_lat": 39.400239,
       "center_lon": 9.140178,
-      "runs": []
+      "runs": [
+        {
+          "file": "sardegna/2026-11-14_run_01.json",
+          "reg": "OK-LON",
+          "date": "2026-11-14",
+          "time": "10:44",
+          "title": "Decollo #1",
+          "duration_sec": 187,
+          "heading_deg": 250,
+          "speed_kt": 66.9
+        }
+      ]
     },
     {
       "id": "reggioemilia",
@@ -2008,5 +2019,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-14T10:43:03.381960+00:00"
+  "last_updated": "2026-11-14T10:44:28.435824+00:00"
 }
