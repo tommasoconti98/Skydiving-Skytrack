@@ -10,6 +10,16 @@
       "center_lon": 14.9608,
       "runs": [
         {
+          "file": "salerno/2026-11-14_run_10.json",
+          "reg": "D-FGMG",
+          "date": "2026-11-14",
+          "time": "13:55",
+          "title": "Decollo #10",
+          "duration_sec": 125,
+          "heading_deg": 225,
+          "speed_kt": 54.3
+        },
+        {
           "file": "salerno/2026-11-14_run_09.json",
           "reg": "D-FGMG",
           "date": "2026-11-14",
@@ -2249,5 +2259,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-14T13:38:10.221030+00:00"
+  "last_updated": "2026-11-14T13:55:59.452718+00:00"
 }
