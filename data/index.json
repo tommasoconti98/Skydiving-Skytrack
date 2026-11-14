@@ -963,6 +963,16 @@
       "center_lon": 11.2388,
       "runs": [
         {
+          "file": "orbetello/2026-11-14_run_01.json",
+          "reg": "OK-AFF",
+          "date": "2026-11-14",
+          "time": "09:54",
+          "title": "Decollo #1",
+          "duration_sec": 87,
+          "heading_deg": 351,
+          "speed_kt": 72.0
+        },
+        {
           "file": "OK-AFF/2026-11-08_run_08.json",
           "date": "2026-11-08",
           "time": "15:51",
@@ -1978,5 +1988,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-14T09:38:19.265444+00:00"
+  "last_updated": "2026-11-14T09:54:23.381952+00:00"
 }
