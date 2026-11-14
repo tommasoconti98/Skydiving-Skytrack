@@ -1763,7 +1763,18 @@
       "photo": "https://cdn.jetphotos.com/full/5/83130_1508861738.jpg",
       "center_lat": 44.697781,
       "center_lon": 10.665812,
-      "runs": []
+      "runs": [
+        {
+          "file": "reggioemilia/2026-11-14_run_01.json",
+          "reg": "D-FRED",
+          "date": "2026-11-14",
+          "time": "09:37",
+          "title": "Decollo #1",
+          "duration_sec": 73,
+          "heading_deg": 112,
+          "speed_kt": 86.8
+        }
+      ]
     },
     {
       "id": "molinella",
@@ -1957,5 +1968,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-14T09:13:53.631898+00:00"
+  "last_updated": "2026-11-14T09:37:17.433000+00:00"
 }
