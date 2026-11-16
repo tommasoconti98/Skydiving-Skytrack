@@ -1,0 +1,37 @@
+{
+  "dropzone_id": "salerno",
+  "dropzone": "SkyDive Salerno",
+  "reg": "D-FGMG",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-14",
+  "time": "14:17",
+  "stats": {
+    "altitude_m": 4053,
+    "heading_deg": 224,
+    "ground_speed_kt": 36.6,
+    "separation_sec": 15.9,
+    "duration_sec": 29
+  },
+  "points": [
+    {
+      "lat": 40.471622,
+      "lon": 14.957458
+    },
+    {
+      "lat": 40.4706,
+      "lon": 14.956059
+    },
+    {
+      "lat": 40.469685,
+      "lon": 14.954439
+    },
+    {
+      "lat": 40.468914,
+      "lon": 14.953172
+    },
+    {
+      "lat": 40.468082,
+      "lon": 14.951783
+    }
+  ]
+}

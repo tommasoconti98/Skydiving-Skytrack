@@ -1,1 +1,45 @@
-{"dropzone_id": "sardegna", "dropzone": "SkyDive Sardegna", "reg": "OK-LON", "model": "Pilatus PC-6", "date": "2026-11-15", "time": "10:36", "stats": {"altitude_m": 3535, "heading_deg": 322, "ground_speed_kt": 72.3, "separation_sec": 8.1, "duration_sec": 73}, "points": [{"lat": 39.385, "lon": 9.1751}, {"lat": 39.3866, "lon": 9.1731}, {"lat": 39.3885, "lon": 9.1712}, {"lat": 39.3903, "lon": 9.1692}, {"lat": 39.3917, "lon": 9.1677}, {"lat": 39.394, "lon": 9.1653}, {"lat": 39.3959, "lon": 9.1637}, {"lat": 39.3982, "lon": 9.1622}, {"lat": 39.4002, "lon": 9.161}, {"lat": 39.4023, "lon": 9.1593}, {"lat": 39.405, "lon": 9.1569}]}
+{
+  "dropzone_id": "sardegna",
+  "dropzone": "SkyDive Sardegna",
+  "reg": "OK-LON",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-15",
+  "time": "10:35",
+  "stats": {
+    "altitude_m": 3444,
+    "heading_deg": 328,
+    "ground_speed_kt": 73.0,
+    "separation_sec": 8.0,
+    "duration_sec": 41
+  },
+  "points": [
+    {
+      "lat": 39.394642,
+      "lon": 9.164711
+    },
+    {
+      "lat": 39.396587,
+      "lon": 9.163294
+    },
+    {
+      "lat": 39.398823,
+      "lon": 9.161878
+    },
+    {
+      "lat": 39.400909,
+      "lon": 9.160504
+    },
+    {
+      "lat": 39.402969,
+      "lon": 9.158744
+    },
+    {
+      "lat": 39.404957,
+      "lon": 9.156949
+    },
+    {
+      "lat": 39.406898,
+      "lon": 9.155152
+    }
+  ]
+}

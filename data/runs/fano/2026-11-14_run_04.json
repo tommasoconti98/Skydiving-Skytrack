@@ -1,1 +1,61 @@
-{"dropzone_id": "fano", "dropzone": "SkyDive Fano", "reg": "9H-RVM", "model": "Pilatus PC-6", "date": "2026-11-14", "time": "13:59", "stats": {"altitude_m": 4084, "heading_deg": 224, "ground_speed_kt": 72.3, "separation_sec": 8.1, "duration_sec": 66}, "points": [{"lat": 43.8407, "lon": 13.049}, {"lat": 43.839, "lon": 13.0467}, {"lat": 43.8371, "lon": 13.0442}, {"lat": 43.8351, "lon": 13.0413}, {"lat": 43.8332, "lon": 13.0387}, {"lat": 43.832, "lon": 13.0369}, {"lat": 43.8303, "lon": 13.0344}, {"lat": 43.8287, "lon": 13.0319}, {"lat": 43.8274, "lon": 13.0294}, {"lat": 43.8259, "lon": 13.0267}]}
+{
+  "dropzone_id": "fano",
+  "dropzone": "SkyDive Fano",
+  "reg": "9H-RVM",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-14",
+  "time": "13:58",
+  "stats": {
+    "altitude_m": 4076,
+    "heading_deg": 226,
+    "ground_speed_kt": 72.4,
+    "separation_sec": 8.1,
+    "duration_sec": 70
+  },
+  "points": [
+    {
+      "lat": 43.840202,
+      "lon": 13.048233
+    },
+    {
+      "lat": 43.83839,
+      "lon": 13.045823
+    },
+    {
+      "lat": 43.836571,
+      "lon": 13.04348
+    },
+    {
+      "lat": 43.835075,
+      "lon": 13.041342
+    },
+    {
+      "lat": 43.833176,
+      "lon": 13.038679
+    },
+    {
+      "lat": 43.832005,
+      "lon": 13.036943
+    },
+    {
+      "lat": 43.830349,
+      "lon": 13.034441
+    },
+    {
+      "lat": 43.828678,
+      "lon": 13.031869
+    },
+    {
+      "lat": 43.827736,
+      "lon": 13.030009
+    },
+    {
+      "lat": 43.826199,
+      "lon": 13.027293
+    },
+    {
+      "lat": 43.824627,
+      "lon": 13.024632
+    }
+  ]
+}

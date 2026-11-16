@@ -1,0 +1,53 @@
+{
+  "dropzone_id": "reggioemilia",
+  "dropzone": "BFU Paracadutismo Reggio Emilia",
+  "reg": "D-FRED",
+  "model": "Caravan C208",
+  "date": "2026-11-14",
+  "time": "11:34",
+  "stats": {
+    "altitude_m": 4069,
+    "heading_deg": 113,
+    "ground_speed_kt": 87.9,
+    "separation_sec": 6.6,
+    "duration_sec": 55
+  },
+  "points": [
+    {
+      "lat": 44.705929,
+      "lon": 10.639857
+    },
+    {
+      "lat": 44.705017,
+      "lon": 10.64379
+    },
+    {
+      "lat": 44.703926,
+      "lon": 10.64736
+    },
+    {
+      "lat": 44.702957,
+      "lon": 10.650657
+    },
+    {
+      "lat": 44.701996,
+      "lon": 10.654122
+    },
+    {
+      "lat": 44.700989,
+      "lon": 10.657523
+    },
+    {
+      "lat": 44.69989,
+      "lon": 10.660858
+    },
+    {
+      "lat": 44.698563,
+      "lon": 10.664259
+    },
+    {
+      "lat": 44.696915,
+      "lon": 10.668444
+    }
+  ]
+}

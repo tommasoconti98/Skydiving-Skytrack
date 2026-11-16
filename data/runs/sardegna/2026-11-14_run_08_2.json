@@ -1,0 +1,57 @@
+{
+  "dropzone_id": "sardegna",
+  "dropzone": "SkyDive Sardegna",
+  "reg": "OK-LON",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-14",
+  "time": "16:14",
+  "stats": {
+    "altitude_m": 4114,
+    "heading_deg": 254,
+    "ground_speed_kt": 33.6,
+    "separation_sec": 17.4,
+    "duration_sec": 62
+  },
+  "points": [
+    {
+      "lat": 39.402313,
+      "lon": 9.14262
+    },
+    {
+      "lat": 39.40213,
+      "lon": 9.141222
+    },
+    {
+      "lat": 39.40184,
+      "lon": 9.139672
+    },
+    {
+      "lat": 39.401337,
+      "lon": 9.138388
+    },
+    {
+      "lat": 39.401035,
+      "lon": 9.136994
+    },
+    {
+      "lat": 39.400909,
+      "lon": 9.135593
+    },
+    {
+      "lat": 39.400452,
+      "lon": 9.134449
+    },
+    {
+      "lat": 39.400002,
+      "lon": 9.133126
+    },
+    {
+      "lat": 39.399437,
+      "lon": 9.131703
+    },
+    {
+      "lat": 39.399429,
+      "lon": 9.130405
+    }
+  ]
+}

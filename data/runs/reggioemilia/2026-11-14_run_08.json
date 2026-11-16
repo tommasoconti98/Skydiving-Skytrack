@@ -1,1 +1,89 @@
-{"dropzone_id": "reggioemilia", "dropzone": "BFU Paracadutismo Reggio Emilia", "reg": "D-FRED", "model": "Caravan C208", "date": "2026-11-14", "time": "13:33", "stats": {"altitude_m": 4061, "heading_deg": 113, "ground_speed_kt": 84.4, "separation_sec": 6.9, "duration_sec": 102}, "points": [{"lat": 44.706, "lon": 10.6354}, {"lat": 44.705, "lon": 10.6387}, {"lat": 44.7037, "lon": 10.6433}, {"lat": 44.7028, "lon": 10.6468}, {"lat": 44.7018, "lon": 10.6502}, {"lat": 44.7009, "lon": 10.6537}, {"lat": 44.6996, "lon": 10.6585}, {"lat": 44.6986, "lon": 10.6621}, {"lat": 44.6977, "lon": 10.6654}, {"lat": 44.6968, "lon": 10.6692}, {"lat": 44.6958, "lon": 10.6726}, {"lat": 44.6943, "lon": 10.6769}, {"lat": 44.6931, "lon": 10.6799}, {"lat": 44.6913, "lon": 10.6839}, {"lat": 44.6901, "lon": 10.6868}]}
+{
+  "dropzone_id": "reggioemilia",
+  "dropzone": "BFU Paracadutismo Reggio Emilia",
+  "reg": "D-FRED",
+  "model": "Caravan C208",
+  "date": "2026-11-14",
+  "time": "14:02",
+  "stats": {
+    "altitude_m": 4091,
+    "heading_deg": 107,
+    "ground_speed_kt": 84.9,
+    "separation_sec": 6.9,
+    "duration_sec": 112
+  },
+  "points": [
+    {
+      "lat": 44.704441,
+      "lon": 10.637847
+    },
+    {
+      "lat": 44.704056,
+      "lon": 10.641501
+    },
+    {
+      "lat": 44.703644,
+      "lon": 10.645033
+    },
+    {
+      "lat": 44.702858,
+      "lon": 10.6487
+    },
+    {
+      "lat": 44.701973,
+      "lon": 10.651982
+    },
+    {
+      "lat": 44.700947,
+      "lon": 10.655197
+    },
+    {
+      "lat": 44.69989,
+      "lon": 10.658308
+    },
+    {
+      "lat": 44.6987,
+      "lon": 10.661316
+    },
+    {
+      "lat": 44.697411,
+      "lon": 10.664442
+    },
+    {
+      "lat": 44.696274,
+      "lon": 10.667725
+    },
+    {
+      "lat": 44.69545,
+      "lon": 10.67106
+    },
+    {
+      "lat": 44.694717,
+      "lon": 10.674722
+    },
+    {
+      "lat": 44.693985,
+      "lon": 10.67845
+    },
+    {
+      "lat": 44.693619,
+      "lon": 10.681719
+    },
+    {
+      "lat": 44.693314,
+      "lon": 10.68541
+    },
+    {
+      "lat": 44.692707,
+      "lon": 10.689028
+    },
+    {
+      "lat": 44.691742,
+      "lon": 10.692247
+    },
+    {
+      "lat": 44.690872,
+      "lon": 10.695845
+    }
+  ]
+}

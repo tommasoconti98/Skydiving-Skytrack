@@ -1,1 +1,57 @@
-{"dropzone_id": "reggioemilia", "dropzone": "BFU Paracadutismo Reggio Emilia", "reg": "D-FRED", "model": "Caravan C208", "date": "2026-11-14", "time": "10:06", "stats": {"altitude_m": 4076, "heading_deg": 110, "ground_speed_kt": 83.8, "separation_sec": 7.0, "duration_sec": 109}, "points": [{"lat": 44.7063, "lon": 10.6393}, {"lat": 44.7051, "lon": 10.6429}, {"lat": 44.704, "lon": 10.6458}, {"lat": 44.7021, "lon": 10.6506}, {"lat": 44.7009, "lon": 10.6539}, {"lat": 44.6998, "lon": 10.6571}, {"lat": 44.6985, "lon": 10.6617}, {"lat": 44.6975, "lon": 10.6649}, {"lat": 44.6965, "lon": 10.6685}, {"lat": 44.6957, "lon": 10.6716}, {"lat": 44.6945, "lon": 10.6761}, {"lat": 44.6938, "lon": 10.6794}, {"lat": 44.6932, "lon": 10.6826}, {"lat": 44.6924, "lon": 10.6874}, {"lat": 44.692, "lon": 10.6911}, {"lat": 44.6915, "lon": 10.6947}]}
+{
+  "dropzone_id": "reggioemilia",
+  "dropzone": "BFU Paracadutismo Reggio Emilia",
+  "reg": "D-FRED",
+  "model": "Caravan C208",
+  "date": "2026-11-14",
+  "time": "10:04",
+  "stats": {
+    "altitude_m": 4076,
+    "heading_deg": 114,
+    "ground_speed_kt": 85.3,
+    "separation_sec": 6.8,
+    "duration_sec": 64
+  },
+  "points": [
+    {
+      "lat": 44.70694,
+      "lon": 10.63712
+    },
+    {
+      "lat": 44.705975,
+      "lon": 10.640259
+    },
+    {
+      "lat": 44.704834,
+      "lon": 10.643724
+    },
+    {
+      "lat": 44.703369,
+      "lon": 10.647159
+    },
+    {
+      "lat": 44.702087,
+      "lon": 10.650591
+    },
+    {
+      "lat": 44.700851,
+      "lon": 10.653861
+    },
+    {
+      "lat": 44.699783,
+      "lon": 10.65714
+    },
+    {
+      "lat": 44.698837,
+      "lon": 10.660531
+    },
+    {
+      "lat": 44.697224,
+      "lon": 10.665915
+    },
+    {
+      "lat": 44.696293,
+      "lon": 10.669466
+    }
+  ]
+}

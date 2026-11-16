@@ -1,1 +1,41 @@
-{"dropzone_id": "salerno", "dropzone": "SkyDive Salerno", "reg": "D-FGMG", "model": "Pilatus PC-6", "date": "2026-11-14", "time": "12:15", "stats": {"altitude_m": 4084, "heading_deg": 233, "ground_speed_kt": 42.3, "separation_sec": 13.8, "duration_sec": 131}, "points": [{"lat": 40.4788, "lon": 14.9641}, {"lat": 40.477, "lon": 14.9613}, {"lat": 40.4757, "lon": 14.9594}, {"lat": 40.4744, "lon": 14.9575}, {"lat": 40.4737, "lon": 14.9563}, {"lat": 40.4726, "lon": 14.9546}, {"lat": 40.4718, "lon": 14.9526}, {"lat": 40.471, "lon": 14.9507}, {"lat": 40.4704, "lon": 14.9493}, {"lat": 40.4696, "lon": 14.9475}, {"lat": 40.4688, "lon": 14.9456}, {"lat": 40.468, "lon": 14.9438}, {"lat": 40.4673, "lon": 14.9421}, {"lat": 40.4668, "lon": 14.9405}, {"lat": 40.4663, "lon": 14.939}, {"lat": 40.4657, "lon": 14.9377}, {"lat": 40.4647, "lon": 14.9363}, {"lat": 40.4625, "lon": 14.936}, {"lat": 40.4603, "lon": 14.9387}]}
+{
+  "dropzone_id": "salerno",
+  "dropzone": "SkyDive Salerno",
+  "reg": "D-FGMG",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-14",
+  "time": "12:35",
+  "stats": {
+    "altitude_m": 3596,
+    "heading_deg": 240,
+    "ground_speed_kt": 38.2,
+    "separation_sec": 15.3,
+    "duration_sec": 61
+  },
+  "points": [
+    {
+      "lat": 40.477348,
+      "lon": 14.961303
+    },
+    {
+      "lat": 40.476509,
+      "lon": 14.959411
+    },
+    {
+      "lat": 40.474621,
+      "lon": 14.95568
+    },
+    {
+      "lat": 40.472824,
+      "lon": 14.953195
+    },
+    {
+      "lat": 40.470844,
+      "lon": 14.950781
+    },
+    {
+      "lat": 40.468513,
+      "lon": 14.948631
+    }
+  ]
+}

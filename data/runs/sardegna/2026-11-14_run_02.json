@@ -1,1 +1,101 @@
-{"dropzone_id": "sardegna", "dropzone": "SkyDive Sardegna", "reg": "OK-LON", "model": "Pilatus PC-6", "date": "2026-11-14", "time": "10:45", "stats": {"altitude_m": 3992, "heading_deg": 235, "ground_speed_kt": 47.2, "separation_sec": 12.4, "duration_sec": 29}, "points": [{"lat": 39.4013, "lon": 9.1287}, {"lat": 39.4, "lon": 9.1265}, {"lat": 39.3994, "lon": 9.1254}, {"lat": 39.3984, "lon": 9.1238}, {"lat": 39.3975, "lon": 9.1217}]}
+{
+  "dropzone_id": "sardegna",
+  "dropzone": "SkyDive Sardegna",
+  "reg": "OK-LON",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-14",
+  "time": "11:06",
+  "stats": {
+    "altitude_m": 4053,
+    "heading_deg": 242,
+    "ground_speed_kt": 54.4,
+    "separation_sec": 10.7,
+    "duration_sec": 140
+  },
+  "points": [
+    {
+      "lat": 39.41452,
+      "lon": 9.161814
+    },
+    {
+      "lat": 39.412968,
+      "lon": 9.159389
+    },
+    {
+      "lat": 39.411488,
+      "lon": 9.15708
+    },
+    {
+      "lat": 39.410213,
+      "lon": 9.154854
+    },
+    {
+      "lat": 39.40934,
+      "lon": 9.153315
+    },
+    {
+      "lat": 39.408173,
+      "lon": 9.151082
+    },
+    {
+      "lat": 39.407017,
+      "lon": 9.148727
+    },
+    {
+      "lat": 39.406006,
+      "lon": 9.146392
+    },
+    {
+      "lat": 39.40519,
+      "lon": 9.144228
+    },
+    {
+      "lat": 39.40448,
+      "lon": 9.1421
+    },
+    {
+      "lat": 39.403839,
+      "lon": 9.140215
+    },
+    {
+      "lat": 39.403221,
+      "lon": 9.138158
+    },
+    {
+      "lat": 39.402702,
+      "lon": 9.136292
+    },
+    {
+      "lat": 39.402149,
+      "lon": 9.134704
+    },
+    {
+      "lat": 39.401539,
+      "lon": 9.133114
+    },
+    {
+      "lat": 39.40078,
+      "lon": 9.131318
+    },
+    {
+      "lat": 39.400143,
+      "lon": 9.129563
+    },
+    {
+      "lat": 39.399529,
+      "lon": 9.127964
+    },
+    {
+      "lat": 39.398895,
+      "lon": 9.126059
+    },
+    {
+      "lat": 39.398216,
+      "lon": 9.124125
+    },
+    {
+      "lat": 39.398129,
+      "lon": 9.121905
+    }
+  ]
+}

@@ -1,1 +1,61 @@
-{"dropzone_id": "orbetello", "dropzone": "SkyDive Costa D'Argento", "reg": "OK-AFF", "model": "Pilatus PC-6", "date": "2026-11-14", "time": "14:16", "stats": {"altitude_m": 4175, "heading_deg": 351, "ground_speed_kt": 72.0, "separation_sec": 8.1, "duration_sec": 58}, "points": [{"lat": 42.4849, "lon": 11.2432}, {"lat": 42.4872, "lon": 11.2425}, {"lat": 42.4894, "lon": 11.2419}, {"lat": 42.4917, "lon": 11.2414}, {"lat": 42.494, "lon": 11.2409}, {"lat": 42.4966, "lon": 11.2404}, {"lat": 42.5, "lon": 11.24}, {"lat": 42.502, "lon": 11.24}, {"lat": 42.5042, "lon": 11.2396}]}
+{
+  "dropzone_id": "orbetello",
+  "dropzone": "SkyDive Costa D'Argento",
+  "reg": "OK-AFF",
+  "model": "Pilatus PC-6",
+  "date": "2026-11-14",
+  "time": "14:14",
+  "stats": {
+    "altitude_m": 4175,
+    "heading_deg": 352,
+    "ground_speed_kt": 72.1,
+    "separation_sec": 8.1,
+    "duration_sec": 71
+  },
+  "points": [
+    {
+      "lat": 42.482769,
+      "lon": 11.2439
+    },
+    {
+      "lat": 42.484932,
+      "lon": 11.243181
+    },
+    {
+      "lat": 42.487244,
+      "lon": 11.242536
+    },
+    {
+      "lat": 42.489391,
+      "lon": 11.241921
+    },
+    {
+      "lat": 42.491707,
+      "lon": 11.24136
+    },
+    {
+      "lat": 42.494011,
+      "lon": 11.240881
+    },
+    {
+      "lat": 42.49662,
+      "lon": 11.240442
+    },
+    {
+      "lat": 42.499363,
+      "lon": 11.240164
+    },
+    {
+      "lat": 42.501987,
+      "lon": 11.240008
+    },
+    {
+      "lat": 42.504242,
+      "lon": 11.23965
+    },
+    {
+      "lat": 42.506306,
+      "lon": 11.239664
+    }
+  ]
+}

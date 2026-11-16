@@ -1,0 +1,57 @@
+{
+  "dropzone_id": "sicilia",
+  "dropzone": "SkyDive Sicilia",
+  "reg": "S5-CMA",
+  "model": "Pilatus PC-6",
+  "date": "2026-10-29",
+  "time": "12:44",
+  "stats": {
+    "altitude_m": 3962,
+    "heading_deg": 34,
+    "ground_speed_kt": 88.0,
+    "separation_sec": 6.6,
+    "duration_sec": 64
+  },
+  "points": [
+    {
+      "lat": 37.00993,
+      "lon": 15.240574
+    },
+    {
+      "lat": 37.012306,
+      "lon": 15.242703
+    },
+    {
+      "lat": 37.014732,
+      "lon": 15.24464
+    },
+    {
+      "lat": 37.017113,
+      "lon": 15.246257
+    },
+    {
+      "lat": 37.019802,
+      "lon": 15.248384
+    },
+    {
+      "lat": 37.022064,
+      "lon": 15.2502
+    },
+    {
+      "lat": 37.024834,
+      "lon": 15.252219
+    },
+    {
+      "lat": 37.027172,
+      "lon": 15.254361
+    },
+    {
+      "lat": 37.02953,
+      "lon": 15.256514
+    },
+    {
+      "lat": 37.031395,
+      "lon": 15.258368
+    }
+  ]
+}
