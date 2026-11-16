@@ -200,6 +200,28 @@ def circular_mean_heading(angles_deg):
     y = sum(math.sin(math.radians(a)) for a in angles_deg)
     return round(math.degrees(math.atan2(y, x)) % 360)
 
+def angle_diff_deg(a, b):
+    return abs((a - b + 180) % 360 - 180)
+
+def haversine_m(lat1, lon1, lat2, lon2):
+    R = 6371000.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+def extract_load_num(title_str):
+    # Estrae il numero principale da "Decollo #4" oppure "Decollo #4_1" -> 4
+    try:
+        if "#" in title_str:
+            part = title_str.split("#")[1].split()[0]
+            base = part.split("_")[0]
+            return int(base)
+    except Exception:
+        pass
+    return 0
+
 class AircraftDropzoneTracker:
     def __init__(self, dz, reg, fleet):
         self.dz_id = dz["id"]
@@ -214,8 +236,15 @@ class AircraftDropzoneTracker:
         self.last_seen = 0
         self.last_point = None
         self.max_alt_m = 0
+        self.turn_away_streak = 0
         self.is_flying = False
         self.paused_sent = False
+        
+        # Gestione salite (loads) e passaggi multipli (_1, _2)
+        self.ready_for_new_load = True
+        self.current_load_num = 0
+        self.current_pass_num = 0
+        self.last_pass_end_time = 0
 
         model_str = self.fleet.get(self.reg, {}).get("model", "").lower()
         if "c208" in model_str or "caravan" in model_str:
@@ -242,8 +271,23 @@ class AircraftDropzoneTracker:
 
     def process_point(self, lat, lon, track, alt_ft, speed_kt, feed_vrt):
         now = time.time()
-        alt_m = int(alt_ft * 0.3048)
+
+        # Se c'è stato un buco di segnale > 4 minuti (atterraggio/ripartenza), il prossimo lancio è una nuova salita
+        if self.last_seen > 0 and (now - self.last_seen) > 240:
+            self.ready_for_new_load = True
+
         self.last_seen = now
+
+        # 0. Scarto pacchetti radar duplicati/congelati (< 1 metro di spostamento)
+        if self.last_point and abs(lat - self.last_point["lat"]) < 0.00001 and abs(lon - self.last_point["lon"]) < 0.00001:
+            return
+
+        alt_m = int(alt_ft * 0.3048)
+        dist_dz = haversine_m(lat, lon, self.center_lat, self.center_lon)
+
+        # Se l'aereo è sceso sotto quota di lancio, la prossima risalita sarà un nuovo decollo
+        if alt_m < (self.min_alt_m - 400):
+            self.ready_for_new_load = True
 
         calc_v_rate = feed_vrt
         turn_rate = 0.0
@@ -258,13 +302,15 @@ class AircraftDropzoneTracker:
         v_rate_fpm = calc_v_rate
         point = {
             "time": now, "lat": lat, "lon": lon, "track": track,
-            "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm
+            "alt_m": alt_m, "alt_ft": alt_ft, "speed_kt": speed_kt, "v_rate": v_rate_fpm,
+            "dist_dz": dist_dz
         }
 
         # 1. ALERT TELEGRAM: Decollo (scatta ad OGNI rotazione)
         if alt_m > 350 and v_rate_fpm > 400 and not self.is_flying:
             self.is_flying = True
             self.paused_sent = False
+            self.ready_for_new_load = True
             update_dropzone_active_reg(self.dz_id, self.reg)
             model = self.fleet.get(self.reg, {}).get("model", "Aereo")
             msg = f"🛫 *Aereo in volo a {self.dz_name}!*\n*{self.reg}* ({model}) sta salendo a {alt_m}m."
@@ -275,32 +321,60 @@ class AircraftDropzoneTracker:
         if self.is_flying and self.state == "IDLE" and alt_m < 400 and v_rate_fpm < 300:
             self.is_flying = False
 
-        # 3. Riconoscimento Run-In
+        # 3. Riconoscimento Run-In (entro 2.5 km dal centro dropzone)
         if self.state == "IDLE":
-            if alt_m >= self.min_alt_m and -1000 < v_rate_fpm < 500 and turn_rate < 3.5 and self.min_spd_kt <= speed_kt <= self.max_spd_kt:
-                self.state = "RUN_IN"
-                self.max_alt_m = alt_m
-                self.buffer = [point]
+            if dist_dz <= 2500 and (now - self.last_pass_end_time) > 25:
+                if alt_m >= self.min_alt_m and -1000 < v_rate_fpm < 800 and turn_rate < 4.5 and self.min_spd_kt <= speed_kt <= self.max_spd_kt:
+                    self.state = "RUN_IN"
+                    self.max_alt_m = alt_m
+                    self.turn_away_streak = 0
+                    self.buffer = [point]
 
         elif self.state == "RUN_IN":
-            if alt_m > self.max_alt_m: self.max_alt_m = alt_m
+            if alt_m > self.max_alt_m:
+                self.max_alt_m = alt_m
 
-            if alt_m > (self.buffer[0]["alt_m"] + 180):
+            # Filtro spike altimetrici / spirali di salita
+            if alt_m > (self.buffer[0]["alt_m"] + 120):
                 self.reset()
                 self.last_point = point
                 return
+
+            buf_dt = now - self.buffer[0]["time"]
+            if buf_dt >= 15:
+                overall_vs = ((alt_ft - self.buffer[0]["alt_ft"]) / buf_dt) * 60.0
+                if overall_vs > 350:
+                    self.reset()
+                    self.last_point = point
+                    return
+
+            # Rilevamento virata di allontanamento / riattaccata (go-around)
+            ref_hdg = circular_mean_heading([p["track"] for p in self.buffer[:min(4, len(self.buffer))]])
+            hdg_dev = angle_diff_deg(track, ref_hdg)
+            if len(self.buffer) >= 3 and hdg_dev > 48:
+                self.turn_away_streak += 1
+            else:
+                self.turn_away_streak = 0
+
+            is_turning_away = (self.turn_away_streak >= 2)
 
             is_dive = (v_rate_fpm <= self.dive_vs_fpm) or \
                       (v_rate_fpm <= self.dive_combo_vs and (speed_kt >= self.dive_combo_spd or turn_rate > 4.0)) or \
                       (alt_m < (self.max_alt_m - 350)) or \
                       (alt_m < (self.min_alt_m - 200))
 
-            if is_dive:
+            if is_dive or dist_dz > 2500 or is_turning_away:
                 self.finalize_run()
                 self.reset()
+                # Se la virata ha appena allineato l'aereo per un secondo passaggio dentro la zona, avvia subito il nuovo buffer
+                if is_turning_away and not is_dive and dist_dz <= 2500 and (now - self.last_pass_end_time) > 25:
+                    if alt_m >= self.min_alt_m and -1000 < v_rate_fpm < 800 and self.min_spd_kt <= speed_kt <= self.max_spd_kt:
+                        self.state = "RUN_IN"
+                        self.max_alt_m = alt_m
+                        self.buffer = [point]
             else:
                 self.buffer.append(point)
-                if (now - self.buffer[0]["time"]) > 180:
+                if (now - self.buffer[0]["time"]) > 240:
                     self.finalize_run()
                     self.reset()
 
@@ -312,15 +386,14 @@ class AircraftDropzoneTracker:
             self.finalize_run()
             self.reset()
         
-        # Sosta a terra tra le rotazioni (> 5 minuti senza segnale radar)
-        # Resetta is_flying così al prossimo decollo parte l'avviso di salita
         if self.is_flying and self.state == "IDLE" and self.last_seen > 0 and (now - self.last_seen) > 300:
             self.is_flying = False
+            self.ready_for_new_load = True
 
-        # Pausa lunga / Fine giornata (> 40 minuti di inattività)
         if not self.paused_sent and self.last_seen > 0 and (now - self.last_seen) > 2400:
             self.paused_sent = True
             self.is_flying = False
+            self.ready_for_new_load = True
             msg = f"💤 *Tracciamento in pausa a {self.dz_name}*\nNessun segnale da {self.reg} da 40 minuti (Atterrato)."
             broadcast_telegram(self.dz_id, msg)
             broadcast_telegram(self.reg, msg)
@@ -333,7 +406,23 @@ class AircraftDropzoneTracker:
         duration = int(run_pts[-1]["time"] - run_pts[0]["time"])
         if duration < 15: return
 
+        # Controllo anti-spirale in salita
+        total_dt = run_pts[-1]["time"] - run_pts[0]["time"]
+        if total_dt > 0:
+            overall_vs = ((run_pts[-1]["alt_ft"] - run_pts[0]["alt_ft"]) / total_dt) * 60.0
+            if overall_vs > 300:
+                return
+
         avg_speed = round(sum(p["speed_kt"] for p in run_pts) / len(run_pts), 1)
+        min_dist_dz = min(p["dist_dz"] for p in run_pts)
+
+        # Verifica che la run passi effettivamente sopra/vicino al campo (entro 1.25 km, o 1.55 km se lento controvento)
+        max_allowed_dist = 1550 if avg_speed < 85 else 1250
+        if min_dist_dz > max_allowed_dist:
+            return
+
+        self.last_pass_end_time = run_pts[-1]["time"]
+
         avg_track = circular_mean_heading([p["track"] for p in run_pts])
         exit_alt = run_pts[0]["alt_m"]
         sep_300m = round(300.0 / (avg_speed * 0.514444), 1) if avg_speed > 0 else 0
@@ -343,12 +432,34 @@ class AircraftDropzoneTracker:
 
         with open(INDEX_PATH, "r") as f: data = json.load(f)
         dz_entry = next((d for d in data.get("dropzones", []) if d["id"] == self.dz_id), None)
-        run_num = len([r for r in dz_entry.get("runs", []) if r.get("date") == d_str]) + 1 if dz_entry else 1
+        today_runs = [r for r in dz_entry.get("runs", []) if r.get("date") == d_str] if dz_entry else []
+
+        if self.ready_for_new_load or not today_runs:
+            existing_loads = [extract_load_num(r.get("title", "")) for r in today_runs]
+            self.current_load_num = max(existing_loads, default=0) + 1
+            self.current_pass_num = 1
+            self.ready_for_new_load = False
+            title_label = f"Decollo #{self.current_load_num}"
+            f_name = f"{d_str}_run_{self.current_load_num:02d}.json"
+        else:
+            # Secondo (o successivo) passaggio della stessa salita in quota!
+            if self.current_load_num == 0:
+                existing_loads = [extract_load_num(r.get("title", "")) for r in today_runs]
+                self.current_load_num = max(existing_loads, default=1)
+            self.current_pass_num += 1
+
+            # Se questo è il 2° passaggio, rinomina il precedente da #N a #N_1
+            if self.current_pass_num == 2:
+                upgrade_first_pass_to_split(self.dz_id, d_str, self.current_load_num)
+
+            title_label = f"Decollo #{self.current_load_num}_{self.current_pass_num}"
+            f_name = f"{d_str}_run_{self.current_load_num:02d}_{self.current_pass_num}.json"
 
         update_dropzone_active_reg(self.dz_id, self.reg)
 
         model = self.fleet.get(self.reg, {}).get("model", "")
-        msg = f"🪂 *Lancio Completato!*\n📍 *{self.dz_name}* — Decollo #{run_num}\n"
+        pass_tag = f" ({self.current_pass_num}° passaggio)" if self.current_pass_num > 1 else ""
+        msg = f"🪂 *Lancio Completato!*\n📍 *{self.dz_name}* — {title_label}{pass_tag}\n"
         msg += f"✈️ Velivolo: *{self.reg}* ({model})\n\n"
         msg += f"📏 Quota: *{exit_alt}m*\n"
         msg += f"🧭 Asse: *{avg_track}°*\n"
@@ -359,7 +470,6 @@ class AircraftDropzoneTracker:
 
         dz_dir = os.path.join(RUNS_DIR, self.dz_id)
         os.makedirs(dz_dir, exist_ok=True)
-        f_name = f"{d_str}_run_{run_num:02d}.json"
         
         run_data = {
             "dropzone_id": self.dz_id, "dropzone": self.dz_name,
@@ -370,15 +480,39 @@ class AircraftDropzoneTracker:
         }
         with open(os.path.join(dz_dir, f_name), "w") as f: json.dump(run_data, f)
         
-        update_master_index(self.dz_id, self.reg, model, self.fleet.get(self.reg, {}).get("photo", ""), f_name, d_str, t_str, duration, avg_track, avg_speed, run_num)
-        push_to_github(f"Lancio {self.dz_name} #{run_num} ({self.reg})")
+        update_master_index(self.dz_id, self.reg, model, self.fleet.get(self.reg, {}).get("photo", ""), f_name, d_str, t_str, duration, avg_track, avg_speed, title_label)
+        push_to_github(f"Lancio {self.dz_name} {title_label} ({self.reg})")
 
     def reset(self):
         self.state = "IDLE"
         self.buffer = []
         self.max_alt_m = 0
+        self.turn_away_streak = 0
 
-def update_master_index(dz_id, reg, model, photo, rel_file, d_str, t_str, duration, heading, speed, run_num):
+def upgrade_first_pass_to_split(dz_id, d_str, load_num):
+    old_fname = f"{d_str}_run_{load_num:02d}.json"
+    new_fname = f"{d_str}_run_{load_num:02d}_1.json"
+    old_path = os.path.join(RUNS_DIR, dz_id, old_fname)
+    new_path = os.path.join(RUNS_DIR, dz_id, new_fname)
+
+    if os.path.exists(old_path):
+        try:
+            os.rename(old_path, new_path)
+        except Exception as e:
+            print(f"Nota rename {old_fname}: {e}")
+
+    with open(INDEX_PATH, "r") as f: data = json.load(f)
+    for dz in data.get("dropzones", []):
+        if dz["id"] == dz_id:
+            for r in dz.get("runs", []):
+                if r.get("file") == f"{dz_id}/{old_fname}":
+                    r["file"] = f"{dz_id}/{new_fname}"
+                    r["title"] = f"Decollo #{load_num}_1"
+                    break
+            break
+    with open(INDEX_PATH, "w") as f: json.dump(data, f, indent=2)
+
+def update_master_index(dz_id, reg, model, photo, rel_file, d_str, t_str, duration, heading, speed, title_label):
     with open(INDEX_PATH, "r") as f: data = json.load(f)
     for dz in data.get("dropzones", []):
         if dz["id"] == dz_id:
@@ -387,7 +521,7 @@ def update_master_index(dz_id, reg, model, photo, rel_file, d_str, t_str, durati
             if photo: dz["photo"] = photo
             dz["runs"].insert(0, {
                 "file": f"{dz_id}/{rel_file}", "reg": reg, "date": d_str, "time": t_str,
-                "title": f"Decollo #{run_num}", "duration_sec": duration,
+                "title": title_label, "duration_sec": duration,
                 "heading_deg": heading, "speed_kt": speed
             })
             break
@@ -433,7 +567,11 @@ def main():
                 for dz in data.get("dropzones", []):
                     today_runs = [r for r in dz.get("runs", []) if r["date"] == today_str]
                     if today_runs:
-                        msg = f"🌅 *Riassunto Giornata @ {dz['name']}*\nOggi completati *{len(today_runs)} decolli* registrati (Ultimo velivolo: {dz.get('active_reg')})."
+                        distinct_loads = {extract_load_num(r.get("title", "")) for r in today_runs}
+                        distinct_loads.discard(0)
+                        n_loads = len(distinct_loads) if distinct_loads else len(today_runs)
+                        extra_str = f" ({len(today_runs)} passaggi totali)" if len(today_runs) > n_loads else ""
+                        msg = f"🌅 *Riassunto Giornata @ {dz['name']}*\nOggi completati *{n_loads} decolli*{extra_str} registrati (Ultimo velivolo: {dz.get('active_reg')})."
                         broadcast_telegram(dz["id"], msg)
                 daily_summary_sent = True
         else:
