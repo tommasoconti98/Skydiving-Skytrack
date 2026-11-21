@@ -2237,6 +2237,16 @@
       "center_lon": 12.22246,
       "runs": [
         {
+          "file": "ravenna/2026-11-21_run_03.json",
+          "reg": "D-EEWY",
+          "date": "2026-11-21",
+          "time": "10:47",
+          "title": "Decollo #3",
+          "duration_sec": 88,
+          "heading_deg": 268,
+          "speed_kt": 68.9
+        },
+        {
           "file": "ravenna/2026-11-21_run_02.json",
           "reg": "D-EEWY",
           "date": "2026-11-21",
@@ -2480,5 +2490,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-21T10:41:36.835057+00:00"
+  "last_updated": "2026-11-21T10:47:11.843630+00:00"
 }
