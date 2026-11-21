@@ -712,6 +712,16 @@
       "center_lon": 12.7457,
       "runs": [
         {
+          "file": "nettuno/2026-11-21_run_01.json",
+          "reg": "S5-CMA",
+          "date": "2026-11-21",
+          "time": "09:03",
+          "title": "Decollo #1",
+          "duration_sec": 73,
+          "heading_deg": 299,
+          "speed_kt": 43.0
+        },
+        {
           "file": "S5-CMA/2026-11-08_run_10.json",
           "date": "2026-11-08",
           "time": "15:16",
@@ -2389,5 +2399,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-16T09:53:09.015026+00:00"
+  "last_updated": "2026-11-21T09:03:39.560814+00:00"
 }
