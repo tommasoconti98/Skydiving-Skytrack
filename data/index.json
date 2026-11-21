@@ -2205,7 +2205,18 @@
       "photo": "https://cdn.jetphotos.com/full/5/535999_1788292834.jpg",
       "center_lat": 44.364059,
       "center_lon": 12.22246,
-      "runs": []
+      "runs": [
+        {
+          "file": "ravenna/2026-11-21_run_01.json",
+          "reg": "D-EEWY",
+          "date": "2026-11-21",
+          "time": "09:59",
+          "title": "Decollo #1",
+          "duration_sec": 29,
+          "heading_deg": 266,
+          "speed_kt": 67.4
+        }
+      ]
     },
     {
       "id": "fano",
@@ -2429,5 +2440,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-21T09:56:20.286979+00:00"
+  "last_updated": "2026-11-21T09:59:13.430427+00:00"
 }
