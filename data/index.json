@@ -1985,6 +1985,16 @@
       "center_lon": 9.140178,
       "runs": [
         {
+          "file": "sardegna/2026-11-21_run_03.json",
+          "reg": "OK-LON",
+          "date": "2026-11-21",
+          "time": "12:03",
+          "title": "Decollo #3",
+          "duration_sec": 139,
+          "heading_deg": 243,
+          "speed_kt": 47.9
+        },
+        {
           "file": "sardegna/2026-11-21_run_02.json",
           "reg": "OK-LON",
           "date": "2026-11-21",
@@ -2560,5 +2570,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-21T11:57:26.191972+00:00"
+  "last_updated": "2026-11-21T12:03:37.502759+00:00"
 }
