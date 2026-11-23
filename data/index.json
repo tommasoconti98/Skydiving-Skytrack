@@ -2618,6 +2618,16 @@
       "center_lon": 13.030592,
       "runs": [
         {
+          "file": "fano/2026-11-23_run_02.json",
+          "reg": "9H-RVM",
+          "date": "2026-11-23",
+          "time": "10:21",
+          "title": "Decollo #2",
+          "duration_sec": 29,
+          "heading_deg": 46,
+          "speed_kt": 67.2
+        },
+        {
           "file": "fano/2026-11-23_run_01.json",
           "reg": "9H-RVM",
           "date": "2026-11-23",
@@ -2900,5 +2910,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-23T10:04:28.959970+00:00"
+  "last_updated": "2026-11-23T10:21:36.378755+00:00"
 }
