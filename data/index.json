@@ -321,6 +321,16 @@
       "center_lon": 10.58,
       "runs": [
         {
+          "file": "lucca/2026-11-28_run_05.json",
+          "reg": "D-FSKY",
+          "date": "2026-11-28",
+          "time": "12:25",
+          "title": "Decollo #5",
+          "duration_sec": 45,
+          "heading_deg": 102,
+          "speed_kt": 56.9
+        },
+        {
           "file": "lucca/2026-11-28_run_04.json",
           "reg": "D-FSKY",
           "date": "2026-11-28",
@@ -3090,5 +3100,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-28T12:11:40.858714+00:00"
+  "last_updated": "2026-11-28T12:25:18.545497+00:00"
 }
