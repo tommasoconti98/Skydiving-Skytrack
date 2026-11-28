@@ -2567,6 +2567,16 @@
       "center_lon": 12.22246,
       "runs": [
         {
+          "file": "ravenna/2026-11-28_run_01.json",
+          "reg": "D-EEWY",
+          "date": "2026-11-28",
+          "time": "10:36",
+          "title": "Decollo #1",
+          "duration_sec": 67,
+          "heading_deg": 74,
+          "speed_kt": 74.3
+        },
+        {
           "file": "ravenna/2026-11-21_run_11.json",
           "reg": "D-EEWY",
           "date": "2026-11-21",
@@ -2980,5 +2990,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-28T10:29:13.503467+00:00"
+  "last_updated": "2026-11-28T10:36:36.128022+00:00"
 }
