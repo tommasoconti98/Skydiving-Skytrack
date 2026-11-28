@@ -291,11 +291,21 @@
       "center_lon": 10.58,
       "runs": [
         {
-          "file": "lucca/2026-11-28_run_01.json",
+          "file": "lucca/2026-11-28_run_01_2.json",
+          "reg": "D-FSKY",
+          "date": "2026-11-28",
+          "time": "09:51",
+          "title": "Decollo #1_2",
+          "duration_sec": 30,
+          "heading_deg": 97,
+          "speed_kt": 56.8
+        },
+        {
+          "file": "lucca/2026-11-28_run_01_1.json",
           "reg": "D-FSKY",
           "date": "2026-11-28",
           "time": "09:50",
-          "title": "Decollo #1",
+          "title": "Decollo #1_1",
           "duration_sec": 30,
           "heading_deg": 44,
           "speed_kt": 71.8
@@ -2930,5 +2940,5 @@
       "runs": []
     }
   ],
-  "last_updated": "2026-11-28T09:50:38.144837+00:00"
+  "last_updated": "2026-11-28T09:51:35.157217+00:00"
 }
